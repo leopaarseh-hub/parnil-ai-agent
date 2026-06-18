@@ -138,6 +138,8 @@ Return a SINGLE raw JSON object (no markdown, no code fences, no commentary outs
   "id": "any placeholder, the server overrides it",
   "date": "any placeholder, the server overrides it",
   "businessName": "the client's business name",
+  "clientName": "the person's name if they shared it in the conversation, else \"\"",
+  "clientEmail": "the person's email if they shared it in the conversation, else \"\" — never invent one",
   "businessType": "industry category, e.g. Restaurant, SaaS, Local Services",
   "mainGoal": "the principal growth objective",
   "selectedStyle": "one of: modern | minimal | luxury | playful | corporate",
@@ -312,6 +314,47 @@ async function generateWithFallback(ai, payload) {
   throw lastError || new Error("All model fallback options exhausted.");
 }
 
+// Supabase lead storage. URL + an insert-capable key. The publishable (anon) key
+// is safe to embed: an RLS policy lets it INSERT only — it cannot read leads back.
+// A service-role key from the environment is preferred when available (it also
+// bypasses RLS), but the embedded fallback means lead capture works with no setup.
+const SUPABASE_URL = "https://pdgkfeyfdtdumlxzqfmi.supabase.co";
+const SUPABASE_FALLBACK_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkZ2tmZXlmZHRkdW1seHpxZm1pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4MDY1MTYsImV4cCI6MjA5NzM4MjUxNn0.IxbqNxDQJfeIJX-HxQoGLy_9aycXBX8OCnqXmU4Pl4I";
+
+// Best-effort lead capture to Supabase. NEVER throws — if it fails, the customer
+// still gets their brief; we just log a warning.
+async function saveLead(lead) {
+  try {
+    const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || SUPABASE_URL;
+    const key =
+      process.env.SUPABASE_SERVICE_ROLE_KEY ||
+      process.env.SUPABASE_SERVICE_KEY ||
+      process.env.SUPABASE_ANON_KEY ||
+      SUPABASE_FALLBACK_KEY;
+    if (!url || !key) {
+      console.warn("Lead not saved: Supabase URL/key not configured.");
+      return;
+    }
+    const resp = await fetch(`${url.replace(/\/$/, "")}/rest/v1/leads`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify(lead),
+    });
+    if (!resp.ok) {
+      const body = await resp.text().catch(() => "");
+      console.warn("Lead save failed:", resp.status, body.slice(0, 200));
+    }
+  } catch (e) {
+    console.warn("Lead save error:", e && e.message);
+  }
+}
+
 async function runChat(messages, lang) {
   if (!messages || !Array.isArray(messages)) {
     throw new ClientError("Messages array is required.", 400);
@@ -382,6 +425,28 @@ Generate the customized Parnil Studio Strategic Business Brief now, as a single 
     lang === "de" ? "de-DE" : lang === "tr" ? "tr-TR" : lang === "fa" ? "fa-IR" : "en-US",
     { year: "numeric", month: "long", day: "numeric" }
   );
+
+  // Capture the lead. Awaited (so it completes before the serverless function
+  // freezes) but best-effort — saveLead never throws.
+  const clientName = String(briefData.clientName || "").trim();
+  const clientEmail = String(briefData.clientEmail || "").trim();
+  if (clientName || clientEmail) {
+    await saveLead({
+      client_name: clientName || null,
+      client_email: clientEmail || null,
+      business_name: briefData.businessName || null,
+      business_type: briefData.businessType || null,
+      main_goal: briefData.mainGoal || null,
+      budget_range: briefData.budgetRange || null,
+      language: lang,
+      brief_id: briefData.id,
+      conversation:
+        chatHistory && Array.isArray(chatHistory)
+          ? chatHistory.map((m) => `${String(m.role).toUpperCase()}: ${m.text}`).join("\n")
+          : null,
+    });
+  }
+
   return briefData;
 }
 
