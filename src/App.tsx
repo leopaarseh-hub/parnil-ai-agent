@@ -533,20 +533,46 @@ export default function App() {
                 </h2>
               </div>
 
-              {/* Compile strategic brief button */}
-              <button
-                type="button"
-                onClick={handleCompileBrief}
-                disabled={isCompiling || chatMessages.length < 3}
-                className={`inline-flex items-center gap-2 px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                  chatMessages.length < 3 
-                    ? 'bg-brand-paper/5 text-brand-paper/30 border border-brand-paper/10 cursor-not-allowed'
-                    : 'bg-brand-acid text-brand-ink hover:bg-brand-acid-hover hover:shadow-[0_0_20px_rgba(200,255,0,0.25)]'
-                }`}
-              >
-                <Sparkles className="h-4 w-4 shrink-0" />
-                <span>{CHAT_LABELS[activeLang].compileBtn}</span>
-              </button>
+              {/* Action buttons: return to an existing brief, and compile/update */}
+              <div className="flex items-center gap-3 self-stretch sm:self-auto">
+                {generatedBrief && (
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('brief')}
+                    className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-wider text-brand-paper bg-brand-paper/[0.07] hover:bg-brand-paper/[0.12] border border-brand-paper/10 hover:border-brand-paper/20 transition-all cursor-pointer font-mono"
+                  >
+                    <FileCheck className="h-4 w-4 shrink-0 text-brand-acid" />
+                    <span>
+                      {activeLang === 'de' ? 'Zurück zum Briefing'
+                        : activeLang === 'tr' ? 'Brifinge Dön'
+                        : activeLang === 'fa' ? 'بازگشت به بریف'
+                        : 'Back to Brief'}
+                    </span>
+                  </button>
+                )}
+
+                {/* Compile / update strategic brief button */}
+                <button
+                  type="button"
+                  onClick={handleCompileBrief}
+                  disabled={isCompiling || chatMessages.length < 3}
+                  className={`inline-flex items-center gap-2 px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                    chatMessages.length < 3
+                      ? 'bg-brand-paper/5 text-brand-paper/30 border border-brand-paper/10 cursor-not-allowed'
+                      : 'bg-brand-acid text-brand-ink hover:bg-brand-acid-hover hover:shadow-[0_0_20px_rgba(200,255,0,0.25)]'
+                  }`}
+                >
+                  <Sparkles className="h-4 w-4 shrink-0" />
+                  <span>
+                    {generatedBrief
+                      ? (activeLang === 'de' ? 'Briefing aktualisieren'
+                        : activeLang === 'tr' ? 'Brifingi Güncelle'
+                        : activeLang === 'fa' ? 'به‌روزرسانی بریف'
+                        : 'Update Brief')
+                      : CHAT_LABELS[activeLang].compileBtn}
+                  </span>
+                </button>
+              </div>
             </div>
 
             {/* Inline validation status log */}
