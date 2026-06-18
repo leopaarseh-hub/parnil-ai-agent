@@ -1,0 +1,73 @@
+@import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@300;400;500;600&family=Vazirmatn:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: "Unbounded", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  /* Core brand palette */
+  --color-brand-ink: #050A14;
+  --color-brand-paper: #F5F3EE;
+  --color-brand-acid: #C8FF00;
+  --color-brand-acid-hover: #b8eb00;
+  --color-brand-ice: #00C2FF;
+  --color-brand-coral: #FF4D2E;
+
+  /* Surface shades */
+  --color-surface-raised: #0E1520;
+  --color-surface-deepest: #0A1018;
+
+  /* Legacy mapping/fallback to ensure no compiler breakage while refactoring */
+  --color-brand-50: #f4f6f8;
+  --color-brand-100: #e7ebf0;
+  --color-brand-200: #c2cfdc;
+  --color-brand-300: #9cb2c9;
+  --color-brand-400: #517b9f;
+  --color-brand-500: #1b4d75;
+  --color-brand-600: #184569;
+  --color-brand-700: #143a58;
+  --color-brand-800: #102e46;
+  --color-brand-900: #0d263a;
+  --color-brand-950: #071520;
+
+  --color-accent-gold: #C8FF00;
+  --color-accent-gold-hover: #b8eb00;
+}
+
+@layer utilities {
+  .glassmorphism {
+    background: rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(245, 243, 238, 0.1);
+  }
+  
+  .glassmorphism-light {
+    background: rgba(245, 243, 238, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(5, 10, 20, 0.06);
+  }
+
+  .text-glow {
+    text-shadow: 0 0 20px rgba(200, 255, 0, 0.35);
+  }
+
+  .text-glow-ice {
+    text-shadow: 0 0 20px rgba(0, 194, 255, 0.35);
+  }
+
+  .text-glow-coral {
+    text-shadow: 0 0 20px rgba(255, 77, 46, 0.35);
+  }
+}
+
+html, body {
+  font-family: var(--font-sans);
+  background-color: #050A14; /* Ink */
+  color: #F5F3EE; /* Paper */
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+

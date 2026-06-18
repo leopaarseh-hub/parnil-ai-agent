@@ -1,0 +1,6 @@
+{
+  "name": "Parnil Studio - Brief Generator",
+  "description": "An interactive, premium website brief generator for clients of Parnil Studio, a modern UI/UX and web design agency.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
