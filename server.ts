@@ -2,18 +2,18 @@ import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
-import { runChat, runBrief, getFriendlyError, ClientError } from "./api/_lib/consultant";
+import handler from "./api/index";
 
 dotenv.config();
 
 /**
  * Local development server.
  *
- * In production on Vercel, the two endpoints are served by serverless functions
- * (api/chat-consultant.ts, api/generate-brief.ts) — Vercel does not run this Express
- * process. This file exists so `npm run dev` works locally (and so the app can also be
- * hosted on any normal Node host via `npm start`). Both paths call the SAME shared logic
- * in api/_lib/consultant.ts, so behaviour is identical everywhere.
+ * In production on Vercel, both endpoints are served by the single serverless
+ * function in api/index.ts — Vercel does not run this Express process. This file
+ * exists so `npm run dev` works locally (and so the app can also run on any normal
+ * Node host via `npm start`). It wires the two Express routes to the SAME handler,
+ * passing the action the way the Vercel rewrites do, so behaviour is identical.
  */
 async function startServer() {
   const app = express();
@@ -21,33 +21,13 @@ async function startServer() {
 
   app.use(express.json({ limit: "1mb" }));
 
-  app.post("/api/chat-consultant", async (req, res) => {
-    const lang = req.body?.lang || "de";
-    try {
-      const text = await runChat(req.body?.messages, lang);
-      res.json({ text });
-    } catch (error: any) {
-      console.error("Chat Consultant Error:", error);
-      if (error instanceof ClientError && error.expose) {
-        return res.status(error.status).json({ error: error.message });
-      }
-      res.status(500).json({ error: getFriendlyError(error, lang) });
-    }
-  });
+  const route = (action: "chat" | "brief") => (req: any, res: any) => {
+    req.query = { ...(req.query || {}), action };
+    return handler(req, res);
+  };
 
-  app.post("/api/generate-brief", async (req, res) => {
-    const lang = req.body?.lang || "de";
-    try {
-      const brief = await runBrief(req.body || {}, lang);
-      res.json(brief);
-    } catch (error: any) {
-      console.error("Brief Generation Error:", error);
-      if (error instanceof ClientError && error.expose) {
-        return res.status(error.status).json({ error: error.message });
-      }
-      res.status(500).json({ error: getFriendlyError(error, lang) });
-    }
-  });
+  app.post("/api/chat-consultant", route("chat"));
+  app.post("/api/generate-brief", route("brief"));
 
   // API fallback so unmatched /api/* requests return JSON, not HTML.
   app.all("/api/*", (req, res) => {
