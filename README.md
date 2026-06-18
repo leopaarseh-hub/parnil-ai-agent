@@ -21,16 +21,33 @@ official `@google/genai` SDK — free to run, no credit card required.
 
 The app serves on http://localhost:3000.
 
+## Deploy on Vercel (free)
+
+This app is configured to deploy on Vercel out of the box:
+
+1. Push the repo to GitHub and "Import Project" in Vercel.
+2. In Vercel → **Project Settings → Environment Variables**, add:
+   `GEMINI_API_KEY = your-free-gemini-key`
+   (Set it for **Production** — and Preview/Development if you use them.)
+3. **Redeploy** after adding the variable (env vars are only picked up on a new build).
+
+How it maps onto Vercel:
+- The two endpoints are **serverless functions** in `api/chat-consultant.ts` and
+  `api/generate-brief.ts` (Vercel does not run the Express server — `server.ts` is for
+  local dev only).
+- The Vite frontend is built to `dist/` and served as static files.
+- All the AI logic lives once in `api/_lib/consultant.ts`, shared by both the
+  serverless functions and the local dev server.
+
 ## How it works
 
 - `POST /api/chat-consultant` — the conversational discovery agent. The full
   conversation is sent each turn, so the consultant never loses context.
 - `POST /api/generate-brief` — synthesises the brief as structured JSON.
 
-Both endpoints run server-side in `server.ts`; the API key is never exposed to the
-browser. The server uses free-tier Flash models (`gemini-2.5-flash` → `gemini-2.0-flash`
-→ `gemini-flash-latest`) with automatic fallback, so a momentary hiccup on one model
-transparently retries on the next.
+The API key is never exposed to the browser. The server uses free-tier Flash models
+(`gemini-2.5-flash` → `gemini-2.0-flash` → `gemini-flash-latest`) with automatic
+fallback, so a momentary hiccup on one model transparently retries on the next.
 
 ### Free tier & limits
 
