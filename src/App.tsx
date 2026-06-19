@@ -96,6 +96,7 @@ export default function App() {
   const [chatInput, setChatInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const chatInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -105,6 +106,15 @@ export default function App() {
       });
     }
   }, [chatMessages, isTyping]);
+
+  // Keep the cursor in the message box so clients can keep typing without
+  // clicking back into it. Refocus once the agent finishes replying (the input
+  // is disabled while it's typing, which drops focus).
+  useEffect(() => {
+    if (!isTyping && viewMode === 'generator') {
+      chatInputRef.current?.focus();
+    }
+  }, [isTyping, viewMode]);
 
   // Synchronize translation of greeting if chat dialog hasn't been engaged yet
   useEffect(() => {
@@ -667,11 +677,13 @@ export default function App() {
                 onSubmit={handleSendMessage}
                 className="p-4 bg-[#070A11] border-t border-brand-paper/10 flex items-center gap-3 shrink-0"
               >
-                <input 
+                <input
+                  ref={chatInputRef}
                   type="text"
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
                   disabled={isTyping}
+                  autoFocus
                   placeholder={CHAT_LABELS[activeLang].inputPlaceholder}
                   className="flex-grow bg-[#050A14] border border-brand-paper/10 rounded-xl px-4 py-3 text-sm text-brand-paper placeholder-brand-paper/20 outline-none focus:border-brand-acid/55 focus:bg-[#050A14]/80 transition-all font-sans"
                 />
@@ -728,6 +740,27 @@ export default function App() {
               <p className="text-[11px] text-center text-brand-paper/40 font-sans leading-relaxed animate-pulse">
                 {CHAT_LABELS[activeLang].needMoreInfo}
               </p>
+            )}
+
+            {/* Primary compile button beneath the chat box — easy to find once
+                the client has chatted enough. Mirrors the header button. */}
+            {chatMessages.length >= 3 && (
+              <button
+                type="button"
+                onClick={handleCompileBrief}
+                disabled={isCompiling}
+                className="inline-flex items-center justify-center gap-2 w-full px-6 py-4 rounded-2xl text-sm font-bold uppercase tracking-wider bg-brand-acid text-brand-ink hover:bg-brand-acid-hover hover:shadow-[0_0_24px_rgba(200,255,0,0.3)] transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <Sparkles className="h-5 w-5 shrink-0" />
+                <span>
+                  {generatedBrief
+                    ? (activeLang === 'de' ? 'Briefing aktualisieren'
+                      : activeLang === 'tr' ? 'Brifingi Güncelle'
+                      : activeLang === 'fa' ? 'به‌روزرسانی بریف'
+                      : 'Update Brief')
+                    : CHAT_LABELS[activeLang].compileBtn}
+                </span>
+              </button>
             )}
 
           </div>
