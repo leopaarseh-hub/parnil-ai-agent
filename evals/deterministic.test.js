@@ -106,3 +106,64 @@ test("contents: collapses to alternating roles starting with user", () => {
   ]);
   assert.strictEqual(c[0].role, "user");
 });
+
+// --- Lead save status (no secrets ever returned to the client) ------------
+const origFetch = global.fetch;
+const setSupabaseEnv = (on) => {
+  if (on) {
+    process.env.SUPABASE_URL = "https://example.supabase.co";
+    process.env.SUPABASE_ANON_KEY = "fake-anon-key";
+  } else {
+    for (const k of ["SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_PUBLISHABLE_KEY", "SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_SERVICE_KEY"]) delete process.env[k];
+  }
+};
+
+test("lead status: not configured -> leadSaved false + safe message", async () => {
+  setSupabaseEnv(false);
+  const r = await X.saveLead({ brief_id: "PRN-1" });
+  assert.strictEqual(r.leadSaved, false);
+  assert.ok(r.leadSaveError && !/key|token|secret/i.test(r.leadSaveError));
+});
+
+test("lead status: success returns leadSaved true + leadId", async () => {
+  setSupabaseEnv(true);
+  global.fetch = async () => ({ ok: true, json: async () => [{ id: "row-42" }], text: async () => "" });
+  const r = await X.saveLead({ brief_id: "PRN-2", client_email: "x@y.com" });
+  assert.strictEqual(r.leadSaved, true);
+  assert.strictEqual(r.leadId, "row-42");
+  global.fetch = origFetch;
+});
+
+test("lead status: HTTP error -> leadSaved false, no secret in message", async () => {
+  setSupabaseEnv(true);
+  global.fetch = async () => ({ ok: false, status: 403, json: async () => ({}), text: async () => "permission denied" });
+  const r = await X.saveLead({ brief_id: "PRN-3" });
+  assert.strictEqual(r.leadSaved, false);
+  assert.ok(r.leadSaveError && !r.leadSaveError.includes("permission denied"));
+  global.fetch = origFetch;
+});
+
+test("lead status: network throw never breaks, returns safe failure", async () => {
+  setSupabaseEnv(true);
+  global.fetch = async () => { throw new Error("ECONNREFUSED secret-host"); };
+  const r = await X.saveLead({ brief_id: "PRN-4" });
+  assert.strictEqual(r.leadSaved, false);
+  assert.ok(r.leadSaveError && !r.leadSaveError.includes("secret-host"));
+  global.fetch = origFetch;
+  setSupabaseEnv(false);
+});
+
+// --- formState sync transform: sitemap "Name: purpose" -> ["Name", ...] ---
+function pageNamesFromSitemap(sitemap) {
+  return Array.isArray(sitemap)
+    ? sitemap.map((e) => String(e).split(":")[0].trim()).filter(Boolean)
+    : [];
+}
+test("formState sync: sitemap entries reduce to clean page names", () => {
+  const pages = pageNamesFromSitemap([
+    "Home: the hero and value prop",
+    "Menu: full food list",
+    "Contact",
+  ]);
+  assert.deepStrictEqual(pages, ["Home", "Menu", "Contact"]);
+});

@@ -486,10 +486,12 @@ async function generateWithFallback(ai, payload) {
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 
 // Best-effort lead capture to Supabase. NEVER throws — if it fails, the customer
-// still gets their brief; we just log a warning.
+// still gets their brief. Returns a SAFE status object (no secrets):
+//   { leadSaved: boolean, leadId?: string|number, leadSaveError?: string }
 async function saveLead(lead) {
   try {
-    const url = SUPABASE_URL;
+    // Read at call time (not module load) so config is always current/testable.
+    const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || SUPABASE_URL;
     const key =
       process.env.SUPABASE_SERVICE_ROLE_KEY ||
       process.env.SUPABASE_SERVICE_KEY ||
@@ -498,7 +500,7 @@ async function saveLead(lead) {
       "";
     if (!url || !key) {
       log("warn", "lead_skipped", { reason: "supabase_not_configured" });
-      return;
+      return { leadSaved: false, leadSaveError: "Lead storage is not configured." };
     }
     const resp = await fetch(`${url.replace(/\/$/, "")}/rest/v1/leads`, {
       method: "POST",
@@ -506,19 +508,37 @@ async function saveLead(lead) {
         "Content-Type": "application/json",
         apikey: key,
         Authorization: `Bearer ${key}`,
-        Prefer: "return=minimal",
+        // Ask PostgREST to return the inserted row so we can report its id.
+        Prefer: "return=representation",
       },
       body: JSON.stringify(lead),
     });
     if (!resp.ok) {
+      // Log the real status server-side (no key is ever logged), but return a
+      // generic, non-secret message to the client.
       const body = await resp.text().catch(() => "");
       log("warn", "lead_save_failed", { status: resp.status, body: body.slice(0, 200) });
-    } else {
-      // Audit trail: a consequential action (a lead was persisted) succeeded.
-      log("info", "lead_saved", { brief_id: lead && lead.brief_id, has_email: !!(lead && lead.client_email) });
+      return { leadSaved: false, leadSaveError: "Could not save lead (storage error)." };
     }
+    // Parse the returned row to surface the database id.
+    let leadId;
+    try {
+      const rows = await resp.json();
+      const row = Array.isArray(rows) ? rows[0] : rows;
+      if (row && row.id != null) leadId = row.id;
+    } catch (_) {
+      // representation parse failed — the row still saved; just no id to report.
+    }
+    // Audit trail: a consequential action (a lead was persisted) succeeded.
+    log("info", "lead_saved", {
+      brief_id: lead && lead.brief_id,
+      lead_id: leadId,
+      has_email: !!(lead && lead.client_email),
+    });
+    return leadId != null ? { leadSaved: true, leadId } : { leadSaved: true };
   } catch (e) {
     log("warn", "lead_save_error", { message: e && e.message });
+    return { leadSaved: false, leadSaveError: "Could not save lead (network error)." };
   }
 }
 
@@ -643,11 +663,13 @@ Generate the customized Parnil Studio Strategic Business Brief now, as a single 
   }
 
   // Capture the lead. Awaited (so it completes before the serverless function
-  // freezes) but best-effort — saveLead never throws.
+  // freezes) but best-effort — saveLead never throws. The save status is
+  // surfaced in the response (leadSaved/leadId/leadSaveError) without exposing
+  // any secrets, and never blocks brief generation.
   const clientName = String(briefData.clientName || "").trim();
   const clientEmail = String(briefData.clientEmail || "").trim();
   if (clientName || clientEmail) {
-    await saveLead({
+    const status = await saveLead({
       client_name: clientName || null,
       client_email: clientEmail || null,
       business_name: briefData.businessName || null,
@@ -666,6 +688,12 @@ Generate the customized Parnil Studio Strategic Business Brief now, as a single 
           ? chatHistory.map((m) => `${String(m.role).toUpperCase()}: ${m.text}`).join("\n")
           : null,
     });
+    briefData.leadSaved = !!(status && status.leadSaved);
+    if (status && status.leadId != null) briefData.leadId = status.leadId;
+    if (status && status.leadSaveError) briefData.leadSaveError = status.leadSaveError;
+  } else {
+    // No contact details were captured, so there is nothing to save.
+    briefData.leadSaved = false;
   }
 
   return briefData;
@@ -727,6 +755,7 @@ module.exports._internals = {
   getFriendlyError,
   computeQuote,
   buildInvestmentCardHTML,
+  saveLead,
   PACKAGES,
   ADDONS,
   LIMITS,

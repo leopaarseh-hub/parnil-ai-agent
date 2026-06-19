@@ -279,6 +279,35 @@ export default function App() {
     }
   };
 
+  // Sync the fields the server extracted into the brief back into formState, so
+  // persisted formState (localStorage) reflects the real client data instead of
+  // staying at defaults. Only overwrites when the brief actually has a value.
+  const syncFormStateFromBrief = (brief: GeneratedBrief) => {
+    if (!brief) return;
+    setFormState(prev => {
+      const next: FormState = { ...prev };
+      const setIf = (key: keyof FormState, value: unknown) => {
+        if (typeof value === 'string' && value.trim()) {
+          (next[key] as string) = value.trim();
+        }
+      };
+      setIf('clientName', (brief as any).clientName);
+      setIf('clientEmail', (brief as any).clientEmail);
+      setIf('businessName', brief.businessName);
+      setIf('businessType', brief.businessType);
+      setIf('mainGoal', brief.mainGoal);
+      setIf('budgetRange', brief.budgetRange);
+      setIf('timelinePreference', brief.estimatedTimeline);
+      // sitemap entries are "Page Name: purpose" — keep just the page names.
+      if (Array.isArray(brief.sitemap) && brief.sitemap.length > 0) {
+        next.selectedPages = brief.sitemap
+          .map(entry => String(entry).split(':')[0].trim())
+          .filter(Boolean);
+      }
+      return next;
+    });
+  };
+
   // Compile brief with secure server-side call
   const handleCompileBrief = async () => {
     setValidationError(null);
@@ -331,7 +360,8 @@ export default function App() {
 
       const remoteBrief = await response.json();
       setCompilingProgress(100);
-      
+      syncFormStateFromBrief(remoteBrief);
+
       setTimeout(() => {
         setGeneratedBrief(remoteBrief);
         setIsCompiling(false);
@@ -382,6 +412,7 @@ export default function App() {
       }
 
       const briefData = await response.json();
+      syncFormStateFromBrief(briefData);
       setGeneratedBrief(briefData);
     } catch (err: any) {
       console.error("Failed to regenerate brief:", err);
