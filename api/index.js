@@ -10,6 +10,60 @@
 
 const MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-flash-latest"];
 
+// ---------------------------------------------------------------------------
+// Observability + safety guardrails (Day 4/5)
+// ---------------------------------------------------------------------------
+
+// Hard limits — defend against runaway input / cost. (Circuit-breaker style.)
+const LIMITS = {
+  MAX_MESSAGES: 60, // a genuine discovery chat never needs this many turns
+  MAX_MESSAGE_CHARS: 4000, // single message
+  MAX_TOTAL_CHARS: 40000, // whole transcript sent to the model
+};
+
+// PII masking for logs/traces — never write raw emails or long digit runs to logs.
+function redactPII(value) {
+  let s = typeof value === "string" ? value : JSON.stringify(value || "");
+  s = s.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, "[email]");
+  s = s.replace(/\+?\d[\d\s().-]{7,}\d/g, "[phone]");
+  return s;
+}
+
+// Structured, single-line JSON logging so traces are queryable in Vercel/Cloud logs.
+function log(level, event, fields) {
+  const safe = {};
+  for (const [k, v] of Object.entries(fields || {})) {
+    safe[k] = typeof v === "string" ? redactPII(v) : v;
+  }
+  try {
+    const line = JSON.stringify({ ts: new Date().toISOString(), level, event, ...safe });
+    if (level === "error") console.error(line);
+    else if (level === "warn") console.warn(line);
+    else console.log(line);
+  } catch (_) {
+    // logging must never throw
+  }
+}
+
+// Lightweight prompt-injection heuristic. We don't block (false positives hurt a
+// real consultation) — we flag it in the trace and rely on the system-prompt
+// instruction-hardening. Untrusted client text is always treated as DATA.
+const INJECTION_PATTERNS = [
+  /ignore (all |previous |above )?(instructions|rules|prompts)/i,
+  /disregard (the |all |previous )?(instructions|rules)/i,
+  /you are now|act as (a |an )?(?:dan|developer mode|jailbreak)/i,
+  /system prompt|reveal your (instructions|prompt|system)/i,
+  /pretend (to be|you are)/i,
+];
+function looksLikeInjection(text) {
+  return typeof text === "string" && INJECTION_PATTERNS.some((re) => re.test(text));
+}
+
+// Short request id for correlating a chat turn / brief across log lines.
+function newRequestId() {
+  return "req_" + Math.random().toString(36).slice(2, 10);
+}
+
 const PARNIL_CATALOG = `Parnil Studio Services and Fees:
 CORE PACKAGES (one-time):
 - Presence — €948 — delivery ~5 days. Entry one-page presence. Included: core build only.
@@ -38,6 +92,107 @@ PRICING PHILOSOPHY (important):
 - Recommend the package that best fits the client's budget and their #1 goal — NOT the most expensive one by default. When budget is modest or unclear, recommend the leanest package that achieves their main goal and note which add-ons can be added later in phases.
 - Flexible options exist: phased rollouts, bundle discounts, seasonal/first-project discounts, and custom scoping. A Parnil expert can tailor the package and unlock the best available price.
 - Always frame cost as a starting estimate and invite the client to connect with a Parnil expert (by replying to their brief / booking a free strategy call) to confirm scope, explore discounts, and get a final personalised quote.`;
+
+// ---------------------------------------------------------------------------
+// Deterministic pricing engine (Day 4: business rules live in CODE).
+// The LLM only chooses WHICH package/add-ons fit the client (the genuinely
+// ambiguous decision). All money math is computed here, never by the model.
+// Keep these prices in sync with PARNIL_CATALOG above.
+// ---------------------------------------------------------------------------
+const PACKAGES = {
+  presence: { label: "Presence", price: 948, timeline: "~5 days" },
+  momentum: { label: "Momentum", price: 1428, timeline: "~10 days" },
+  authority: { label: "Authority", price: 2227, timeline: "~14 days" },
+};
+const ADDONS = {
+  booking_system: { label: "Booking System", price: 149 },
+  reservation_system: { label: "Reservation System", price: 179 },
+  online_ordering: { label: "Online Ordering", price: 249 },
+  online_shop: { label: "Online Shop", price: 499 },
+  digital_menu: { label: "Digital Menu", price: 89 },
+  blog: { label: "Blog", price: 129 },
+  photo_gallery: { label: "Photo Gallery", price: 69 },
+  multi_language: { label: "Multi-Language (per language)", price: 79 },
+  seo_setup: { label: "SEO Setup", price: 149 },
+  google_ads_setup: { label: "Google Ads Setup", price: 199 },
+  gbp_optimization: { label: "Google Business Profile Optimization", price: 99 },
+  monthly_reporting: { label: "Monthly Reporting", price: 49, recurring: true },
+  whatsapp_automation: { label: "WhatsApp Automation", price: 99 },
+  ai_chatbot: { label: "AI Chatbot", price: 249 },
+  ai_lead_qualification: { label: "AI Lead Qualification", price: 299 },
+  crm_integration: { label: "CRM Integration", price: 349 },
+  automated_appointments: { label: "Automated Appointments", price: 199 },
+  automated_customer_support: { label: "Automated Customer Support", price: 249 },
+  logo_design: { label: "Logo Design", price: 249 },
+  visual_identity: { label: "Visual Identity", price: 349 },
+  brand_strategy: { label: "Brand Strategy", price: 299 },
+  content_creation: { label: "Content Creation", price: 149 },
+  one_time_maintenance: { label: "One-Time Maintenance Request", price: 49 },
+  unlimited_monthly_content: { label: "Unlimited Monthly Content Support", price: 35, recurring: true },
+};
+
+const euro = (n) => "€" + Number(n || 0).toLocaleString("en-US");
+
+// Pure function — given a package key + add-on keys, return the authoritative
+// quote. Unknown keys are ignored. Never throws.
+function computeQuote(packageKey, addOnKeys) {
+  const pkg = PACKAGES[packageKey] || PACKAGES.presence;
+  const keys = Array.isArray(addOnKeys) ? addOnKeys : [];
+  const items = [];
+  let oneTime = pkg.price;
+  let monthly = 0;
+  for (const k of keys) {
+    const a = ADDONS[k];
+    if (!a) continue;
+    items.push({ key: k, label: a.label, price: a.price, recurring: !!a.recurring });
+    if (a.recurring) monthly += a.price;
+    else oneTime += a.price;
+  }
+  return {
+    packageKey: PACKAGES[packageKey] ? packageKey : "presence",
+    packageLabel: pkg.label,
+    packagePrice: pkg.price,
+    timeline: pkg.timeline,
+    addOns: items,
+    oneTimeTotal: oneTime,
+    monthlyTotal: monthly,
+    currency: "EUR",
+  };
+}
+
+// Localized labels for the code-built investment card.
+const CARD_T = {
+  en: { title: "RECOMMENDED SOLUTION & INVESTMENT", pkg: "Core Package", addons: "Add-ons", total: "ESTIMATED TOTAL INVESTMENT", monthly: "Recurring", note: "This is a starting estimate — the final price can often be lower once scope is tailored, and discounts may apply.", cta: "Talk to a Parnil expert to tailor your package and unlock the best price." },
+  de: { title: "EMPFOHLENE LÖSUNG & INVESTITION", pkg: "Kernpaket", addons: "Zusatzleistungen", total: "GESCHÄTZTE GESAMTINVESTITION", monthly: "Monatlich", note: "Dies ist eine erste Schätzung — der Endpreis ist oft niedriger, sobald der Umfang angepasst ist, und Rabatte sind möglich.", cta: "Sprechen Sie mit einem Parnil-Experten, um Ihr Paket anzupassen und den besten Preis zu sichern." },
+  tr: { title: "ÖNERİLEN ÇÖZÜM & YATIRIM", pkg: "Ana Paket", addons: "Ek Hizmetler", total: "TAHMİNİ TOPLAM YATIRIM", monthly: "Aylık", note: "Bu bir başlangıç tahminidir — kapsam özelleştirildikçe nihai fiyat genellikle daha düşük olur ve indirimler uygulanabilir.", cta: "Paketinizi uyarlamak ve en iyi fiyatı almak için bir Parnil uzmanıyla görüşün." },
+  fa: { title: "راهکار پیشنهادی و سرمایه‌گذاری", pkg: "بسته اصلی", addons: "افزودنی‌ها", total: "مجموع سرمایه‌گذاری تخمینی", monthly: "ماهانه", note: "این یک برآورد اولیه است — قیمت نهایی اغلب پس از تنظیم دامنه کمتر می‌شود و تخفیف‌ها ممکن است اعمال شوند.", cta: "برای متناسب‌سازی بسته و دریافت بهترین قیمت با کارشناس پارنیل صحبت کنید." },
+};
+
+// Build the authoritative investment card HTML (matches the brief's styling).
+function buildInvestmentCardHTML(quote, lang) {
+  const t = CARD_T[lang] || CARD_T.en;
+  const sub = "text-brand-paper/50 text-[10px] uppercase font-mono tracking-wider";
+  const rows = quote.addOns
+    .map(
+      (a) =>
+        `<div class=\"flex justify-between gap-4\"><span>${a.label}${a.recurring ? " (" + t.monthly + ")" : ""}</span><span class=\"font-mono\">${euro(a.price)}${a.recurring ? "/mo" : ""}</span></div>`
+    )
+    .join("");
+  const monthlyLine = quote.monthlyTotal
+    ? `<div class=\"flex justify-between gap-4\"><span class=\"${sub}\">${t.monthly}</span><span class=\"font-mono\">${euro(quote.monthlyTotal)}/mo</span></div>`
+    : "";
+  return (
+    `<div class=\"box-border border border-brand-acid/20 bg-surface-raised/40 p-5 rounded-xl space-y-3 mt-6 animate-fade-in\">` +
+    `<span class=\"text-base font-bold text-brand-paper uppercase tracking-wider block mb-2 font-display border-b border-brand-paper/10 pb-1.5\">${t.title}</span>` +
+    `<div class=\"flex justify-between gap-4\"><span>${t.pkg}: ${quote.packageLabel}</span><span class=\"font-mono\">${euro(quote.packagePrice)}</span></div>` +
+    (rows ? `<div class=\"${sub}\">${t.addons}</div>${rows}` : "") +
+    monthlyLine +
+    `<div class=\"flex justify-between gap-4 pt-2 border-t border-brand-paper/10\"><span class=\"font-bold\">${t.total}</span><span class=\"text-brand-acid font-bold font-mono text-lg\">${euro(quote.oneTimeTotal)}</span></div>` +
+    `<p class=\"text-brand-paper/70 text-xs leading-relaxed mt-3\">${t.note}</p>` +
+    `<p class=\"text-brand-acid font-semibold text-sm mt-2\">${t.cta}</p>` +
+    `</div>`
+  );
+}
 
 class ClientError extends Error {
   constructor(message, status = 400) {
@@ -139,8 +294,8 @@ From the client information provided, recommend exactly ONE core package plus on
 
 # QUALITY BAR
 - Reference concrete details the client gave (their industry, their bottleneck, their goal). Avoid platitudes.
-- The investment math must be correct: Estimated Total = package price + one-time add-ons; show any €/month recurring items separately.
 - Be decisive and senior in tone — recommendations, not a menu of options.
+- Do NOT calculate prices or totals, and do NOT write an investment/pricing card. You only SELECT the package and add-ons (by key) — the system computes and appends the official, exact investment card. Never put € amounts in the summary.
 
 # OUTPUT FORMAT
 Return a SINGLE raw JSON object (no markdown, no code fences, no commentary outside the JSON) with EXACTLY these fields:
@@ -153,8 +308,10 @@ Return a SINGLE raw JSON object (no markdown, no code fences, no commentary outs
   "businessType": "industry category, e.g. Restaurant, SaaS, Local Services",
   "mainGoal": "the principal growth objective",
   "selectedStyle": "one of: modern | minimal | luxury | playful | corporate",
+  "recommendedPackage": "EXACTLY one of: presence | momentum | authority — pick the one that fits the client's budget and #1 goal; do not default to the most expensive",
+  "recommendedAddOns": ["zero or more add-on KEYS from this exact list: booking_system, reservation_system, online_ordering, online_shop, digital_menu, blog, photo_gallery, multi_language, seo_setup, google_ads_setup, gbp_optimization, monthly_reporting, whatsapp_automation, ai_chatbot, ai_lead_qualification, crm_integration, automated_appointments, automated_customer_support, logo_design, visual_identity, brand_strategy, content_creation, one_time_maintenance, unlimited_monthly_content — only those genuinely justified by what the client said"],
   "budgetRange": "inferred budget tier, e.g. '€2,000 - €5,000'",
-  "summary": "rich HTML — see instructions below",
+  "summary": "rich HTML — see instructions below. Do NOT include any prices or an investment card; the system appends the official one.",
   "sitemap": ["4-6 entries, each 'Page Name: one-sentence strategic purpose' in the target language"],
   "headline": "punchy marketing hero headline in the target language",
   "cta": "call-to-action button text in the target language",
@@ -185,13 +342,7 @@ Write it in ${langLabel} as HTML using these exact Tailwind utilities on the wra
 6. AUTOMATION RECOMMENDATIONS — lead capture, CRM pipeline, efficiency gains.
 7. PRIORITY ACTIONS — the immediate moves that unlock growth.
 8. SUGGESTED NEXT STEPS — a short forward timeline.
-After the sections, append an HTML card with 'box-border border border-brand-acid/20 bg-surface-raised/40 p-5 rounded-xl space-y-3 mt-6 animate-fade-in' containing:
-- A header 'RECOMMENDED SOLUTION & INVESTMENT'
-- The package name + price
-- Each selected add-on itemised with its price
-- The total as 'ESTIMATED TOTAL INVESTMENT' in bold using 'text-brand-acid font-bold font-mono text-lg' (sum of package + one-time add-ons; list any monthly items separately as recurring). Use 'text-brand-paper/50 text-[10px] uppercase font-mono tracking-wider' for small section subtitles.
-- After the total, append a short flexibility note in a <p> styled 'text-brand-paper/70 text-xs leading-relaxed mt-3', written in ${langLabel}, that conveys: this is a starting estimate, the final price can often be LOWER once scope is tailored, discounts may be available, and the client should connect with a Parnil expert (by replying to this brief or booking a free strategy call) to confirm scope and get their best personalised price.
-- Then add a clear call-to-action line styled 'text-brand-acid font-semibold text-sm mt-2' in ${langLabel}, e.g. "Talk to a Parnil expert to tailor your package and unlock the best price."
+Do NOT append any pricing or investment card and do NOT mention € amounts — the system computes the exact figures from your recommendedPackage / recommendedAddOns selection and appends the official investment card automatically.
 
 Ensure every double quote inside the HTML is escaped so the JSON stays valid.
 
@@ -326,26 +477,27 @@ async function generateWithFallback(ai, payload) {
   throw lastError || new Error("All model fallback options exhausted.");
 }
 
-// Supabase lead storage. URL + an insert-capable key. The publishable (anon) key
-// is safe to embed: an RLS policy lets it INSERT only — it cannot read leads back.
-// A service-role key from the environment is preferred when available (it also
-// bypasses RLS), but the embedded fallback means lead capture works with no setup.
-const SUPABASE_URL = "https://pdgkfeyfdtdumlxzqfmi.supabase.co";
-const SUPABASE_FALLBACK_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkZ2tmZXlmZHRkdW1seHpxZm1pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4MDY1MTYsImV4cCI6MjA5NzM4MjUxNn0.IxbqNxDQJfeIJX-HxQoGLy_9aycXBX8OCnqXmU4Pl4I";
+// Supabase lead storage. URL + an insert-capable key, both read from the
+// environment — no secrets are committed to source. The publishable/anon key is
+// safe even client-side (an RLS policy lets it INSERT only; it cannot read leads
+// back), and a service-role key is preferred when present (it also bypasses RLS).
+// If neither is configured, lead capture is skipped gracefully — the brief is
+// never affected. See .env.example and SECURITY.md.
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 
 // Best-effort lead capture to Supabase. NEVER throws — if it fails, the customer
 // still gets their brief; we just log a warning.
 async function saveLead(lead) {
   try {
-    const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || SUPABASE_URL;
+    const url = SUPABASE_URL;
     const key =
       process.env.SUPABASE_SERVICE_ROLE_KEY ||
       process.env.SUPABASE_SERVICE_KEY ||
       process.env.SUPABASE_ANON_KEY ||
-      SUPABASE_FALLBACK_KEY;
+      process.env.SUPABASE_PUBLISHABLE_KEY ||
+      "";
     if (!url || !key) {
-      console.warn("Lead not saved: Supabase URL/key not configured.");
+      log("warn", "lead_skipped", { reason: "supabase_not_configured" });
       return;
     }
     const resp = await fetch(`${url.replace(/\/$/, "")}/rest/v1/leads`, {
@@ -360,16 +512,47 @@ async function saveLead(lead) {
     });
     if (!resp.ok) {
       const body = await resp.text().catch(() => "");
-      console.warn("Lead save failed:", resp.status, body.slice(0, 200));
+      log("warn", "lead_save_failed", { status: resp.status, body: body.slice(0, 200) });
+    } else {
+      // Audit trail: a consequential action (a lead was persisted) succeeded.
+      log("info", "lead_saved", { brief_id: lead && lead.brief_id, has_email: !!(lead && lead.client_email) });
     }
   } catch (e) {
-    console.warn("Lead save error:", e && e.message);
+    log("warn", "lead_save_error", { message: e && e.message });
   }
 }
 
-async function runChat(messages, lang) {
+// Deterministic input validation / circuit breaker — runs in CODE, before any
+// LLM call, so malformed or oversized input is rejected cheaply and safely.
+function validateMessages(messages) {
   if (!messages || !Array.isArray(messages)) {
     throw new ClientError("Messages array is required.", 400);
+  }
+  if (messages.length > LIMITS.MAX_MESSAGES) {
+    throw new ClientError("Conversation too long. Please start a new session.", 413);
+  }
+  let total = 0;
+  let injectionFlagged = false;
+  for (const m of messages) {
+    const text = m && typeof m.text === "string" ? m.text : "";
+    if (text.length > LIMITS.MAX_MESSAGE_CHARS) {
+      throw new ClientError("A message is too long. Please shorten it.", 413);
+    }
+    total += text.length;
+    if (m && m.role === "user" && looksLikeInjection(text)) injectionFlagged = true;
+  }
+  if (total > LIMITS.MAX_TOTAL_CHARS) {
+    throw new ClientError("Conversation too large. Please start a new session.", 413);
+  }
+  return { injectionFlagged };
+}
+
+async function runChat(messages, lang) {
+  const { injectionFlagged } = validateMessages(messages);
+  if (injectionFlagged) {
+    // Not blocked — flagged for the audit trail. The system prompt treats all
+    // chat content as untrusted data and ignores embedded instructions.
+    log("warn", "prompt_injection_flagged", { turns: messages.length });
   }
   const ai = await makeClient();
   const response = await generateWithFallback(ai, {
@@ -438,6 +621,27 @@ Generate the customized Parnil Studio Strategic Business Brief now, as a single 
     { year: "numeric", month: "long", day: "numeric" }
   );
 
+  // DETERMINISTIC PRICING: compute the exact quote in code from the model's
+  // selection, and append the authoritative investment card. If the model
+  // didn't return a valid package key, fall back to whatever summary it wrote
+  // (non-breaking). The model is never trusted to do money math.
+  if (briefData.recommendedPackage && PACKAGES[briefData.recommendedPackage]) {
+    const quote = computeQuote(briefData.recommendedPackage, briefData.recommendedAddOns);
+    briefData.quote = quote; // structured, machine-checkable
+    briefData.budgetRange = quote.monthlyTotal
+      ? `${euro(quote.oneTimeTotal)} + ${euro(quote.monthlyTotal)}/mo`
+      : euro(quote.oneTimeTotal);
+    briefData.estimatedTimeline = briefData.estimatedTimeline || quote.timeline;
+    briefData.summary = String(briefData.summary || "") + buildInvestmentCardHTML(quote, lang);
+    log("info", "quote_computed", {
+      brief_id: briefData.id,
+      package: quote.packageKey,
+      addons: quote.addOns.length,
+      one_time: quote.oneTimeTotal,
+      monthly: quote.monthlyTotal,
+    });
+  }
+
   // Capture the lead. Awaited (so it completes before the serverless function
   // freezes) but best-effort — saveLead never throws.
   const clientName = String(briefData.clientName || "").trim();
@@ -476,27 +680,54 @@ function resolveAction(req) {
   return "chat";
 }
 
-module.exports = async function handler(req, res) {
+async function handler(req, res) {
   const lang = (req.body && req.body.lang) || "de";
+  const requestId = newRequestId();
+  const startedAt = Date.now();
+  if (res && typeof res.setHeader === "function") res.setHeader("x-request-id", requestId);
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
   const action = resolveAction(req);
+  log("info", "request_start", { request_id: requestId, action, lang });
   try {
+    let payload;
     if (action === "brief") {
-      const brief = await runBrief(req.body || {}, lang);
-      return res.status(200).json(brief);
+      payload = await runBrief(req.body || {}, lang);
+    } else {
+      payload = { text: await runChat(req.body && req.body.messages, lang) };
     }
-    const text = await runChat(req.body && req.body.messages, lang);
-    return res.status(200).json({ text });
+    log("info", "request_ok", { request_id: requestId, action, ms: Date.now() - startedAt });
+    return res.status(200).json(payload);
   } catch (error) {
-    console.error(
-      `${action === "brief" ? "Brief Generation" : "Chat Consultant"} Error:`,
-      error
-    );
+    log("error", "request_error", {
+      request_id: requestId,
+      action,
+      ms: Date.now() - startedAt,
+      status: (error && error.status) || 500,
+      message: error && error.message,
+    });
     if (error instanceof ClientError && error.expose) {
       return res.status(error.status).json({ error: error.message });
     }
     return res.status(500).json({ error: getFriendlyError(error, lang) });
   }
+}
+
+// Export the handler (default) plus internals for the eval/spec harness.
+module.exports = handler;
+module.exports.handler = handler;
+module.exports._internals = {
+  redactPII,
+  looksLikeInjection,
+  validateMessages,
+  resolveAction,
+  toGeminiContents,
+  getFriendlyError,
+  computeQuote,
+  buildInvestmentCardHTML,
+  PACKAGES,
+  ADDONS,
+  LIMITS,
 };
