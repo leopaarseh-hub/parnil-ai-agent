@@ -438,6 +438,11 @@ Generate the customized Parnil Studio Strategic Business Brief now, as a single 
       business_type: briefData.businessType || null,
       main_goal: briefData.mainGoal || null,
       budget_range: briefData.budgetRange || null,
+      // The agent's suggested website pages (sitemap), one per line.
+      recommended_pages:
+        briefData.sitemap && Array.isArray(briefData.sitemap)
+          ? briefData.sitemap.join("\n")
+          : null,
       language: lang,
       brief_id: briefData.id,
       conversation:
