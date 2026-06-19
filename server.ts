@@ -17,7 +17,8 @@ dotenv.config();
  */
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  // PORT is provided by the platform (Cloud Run, etc.); default to 3000 locally.
+  const PORT = Number(process.env.PORT) || 3000;
 
   app.use(express.json({ limit: "1mb" }));
 
