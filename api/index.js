@@ -31,7 +31,13 @@ ADD-ONS — Branding & Support:
 - Logo Design — €249 | Visual Identity — €349 | Brand Strategy — €299 | Content Creation — €149
 - One-Time Maintenance Request — €49 | Unlimited Monthly Content Support — €35/month
 
-Quoting rule: Total EUR Investment = chosen package price + selected one-time add-ons + recurring €X/month (shown separately).`;
+Quoting rule: Total EUR Investment = chosen package price + selected one-time add-ons + recurring €X/month (shown separately).
+
+PRICING PHILOSOPHY (important):
+- Prices above are LIST starting prices, not fixed final quotes. The real figure is often LOWER once scope is tailored to what the client truly needs.
+- Recommend the package that best fits the client's budget and their #1 goal — NOT the most expensive one by default. When budget is modest or unclear, recommend the leanest package that achieves their main goal and note which add-ons can be added later in phases.
+- Flexible options exist: phased rollouts, bundle discounts, seasonal/first-project discounts, and custom scoping. A Parnil expert can tailor the package and unlock the best available price.
+- Always frame cost as a starting estimate and invite the client to connect with a Parnil expert (by replying to their brief / booking a free strategy call) to confirm scope, explore discounts, and get a final personalised quote.`;
 
 class ClientError extends Error {
   constructor(message, status = 400) {
@@ -93,6 +99,7 @@ Run a focused discovery conversation, then guide the client to compile their Str
   5. Any must-have functionality (bookings, online shop, menu, multi-language, automation, etc.) or visual taste.
 - Adapt. If an answer is rich, skip redundant questions. If an answer is short, vague, or frustrated ("idk", "everyone", "just more money"), don't repeat the question — reframe it warmly with a concrete example or a quick this-or-that choice that makes it effortless to answer.
 - Never quote prices or list packages during discovery. The brief reveals the recommendation. You may hint that a solution is taking shape.
+- If the client worries about cost or budget, reassure them warmly WITHOUT quoting numbers: their solution can be tailored and phased, the final price is often lower than expected, discounts may apply, and a Parnil expert will walk them through options to find the best fit. Then continue the discovery.
 
 # COLLECTING CONTACT DETAILS
 Once the business picture is clear (usually after ~4–5 substantive answers), pivot smoothly to capture, conversationally and ideally in one ask:
@@ -125,7 +132,7 @@ The ENTIRE proposal — every field, header, and sentence — MUST be written in
 ${PARNIL_CATALOG}
 
 # YOUR TASK
-From the client information provided, recommend exactly ONE core package plus only the add-ons that genuinely serve their stated goals. Do not oversell — every recommended item must map to something the client actually said or clearly needs. Then write a brief that feels like it came from a top-tier strategy consultancy: specific to THIS business, never generic, never filler.
+From the client information provided, recommend exactly ONE core package plus only the add-ons that genuinely serve their stated goals. Pick the package that fits the client's budget and #1 goal — do NOT default to the most expensive package. If budget is modest or unclear, recommend the leanest package that achieves their main goal and mention which add-ons can be added later in phases. Do not oversell — every recommended item must map to something the client actually said or clearly needs. Then write a brief that feels like it came from a top-tier strategy consultancy: specific to THIS business, never generic, never filler.
 
 # QUALITY BAR
 - Reference concrete details the client gave (their industry, their bottleneck, their goal). Avoid platitudes.
@@ -180,6 +187,8 @@ After the sections, append an HTML card with 'box-border border border-brand-aci
 - The package name + price
 - Each selected add-on itemised with its price
 - The total as 'ESTIMATED TOTAL INVESTMENT' in bold using 'text-brand-acid font-bold font-mono text-lg' (sum of package + one-time add-ons; list any monthly items separately as recurring). Use 'text-brand-paper/50 text-[10px] uppercase font-mono tracking-wider' for small section subtitles.
+- After the total, append a short flexibility note in a <p> styled 'text-brand-paper/70 text-xs leading-relaxed mt-3', written in ${langLabel}, that conveys: this is a starting estimate, the final price can often be LOWER once scope is tailored, discounts may be available, and the client should connect with a Parnil expert (by replying to this brief or booking a free strategy call) to confirm scope and get their best personalised price.
+- Then add a clear call-to-action line styled 'text-brand-acid font-semibold text-sm mt-2' in ${langLabel}, e.g. "Talk to a Parnil expert to tailor your package and unlock the best price."
 
 Ensure every double quote inside the HTML is escaped so the JSON stays valid.
 
