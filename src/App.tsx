@@ -74,8 +74,35 @@ const CHAT_LABELS = {
   }
 };
 
+// --- Long-term (same-device) memory -------------------------------------
+// Persist the session so a visitor who refreshes or comes back later on the
+// same device resumes their conversation and brief where they left off.
+const SESSION_KEY = 'parnil_session_v1';
+
+type PersistedSession = {
+  activeLang?: SupportedLang;
+  viewMode?: 'landing' | 'generator' | 'brief';
+  formState?: FormState;
+  generatedBrief?: GeneratedBrief | null;
+  chatMessages?: { role: 'user' | 'model'; text: string }[];
+};
+
+function loadSession(): PersistedSession {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = window.localStorage.getItem(SESSION_KEY);
+    return raw ? (JSON.parse(raw) as PersistedSession) : {};
+  } catch {
+    return {};
+  }
+}
+
 export default function App() {
+  // Restore any saved session once, up front, so there's no flash of empty state.
+  const savedSession = useRef<PersistedSession>(loadSession()).current;
+
   const [activeLang, setActiveLang] = useState<SupportedLang>(() => {
+    if (savedSession.activeLang) return savedSession.activeLang;
     if (typeof window !== 'undefined' && window.navigator && window.navigator.language) {
       const code = window.navigator.language.substring(0, 2).toLowerCase();
       if (code === 'de' || code === 'en' || code === 'tr' || code === 'fa') {
@@ -85,14 +112,14 @@ export default function App() {
     return 'de';
   });
 
-  const [viewMode, setViewMode] = useState<'landing' | 'generator' | 'brief'>('landing');
-  const [formState, setFormState] = useState<FormState>(INITIAL_FORM_STATE);
-  const [generatedBrief, setGeneratedBrief] = useState<GeneratedBrief | null>(null);
+  const [viewMode, setViewMode] = useState<'landing' | 'generator' | 'brief'>(savedSession.viewMode ?? 'landing');
+  const [formState, setFormState] = useState<FormState>(savedSession.formState ?? INITIAL_FORM_STATE);
+  const [generatedBrief, setGeneratedBrief] = useState<GeneratedBrief | null>(savedSession.generatedBrief ?? null);
   const [compilingProgress, setCompilingProgress] = useState(0);
   const [isCompiling, setIsCompiling] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'model'; text: string }[]>([]);
+  const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'model'; text: string }[]>(savedSession.chatMessages ?? []);
   const [chatInput, setChatInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -115,6 +142,19 @@ export default function App() {
       chatInputRef.current?.focus();
     }
   }, [isTyping, viewMode]);
+
+  // Persist the session to the same device so the visitor can resume later.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(
+        SESSION_KEY,
+        JSON.stringify({ activeLang, viewMode, formState, generatedBrief, chatMessages })
+      );
+    } catch {
+      // Storage full or unavailable (e.g. private mode) — ignore; not critical.
+    }
+  }, [activeLang, viewMode, formState, generatedBrief, chatMessages]);
 
   // Synchronize translation of greeting if chat dialog hasn't been engaged yet
   useEffect(() => {
@@ -170,9 +210,10 @@ export default function App() {
   const handleStartGenerator = () => {
     setValidationError(null);
     setViewMode('generator');
-    setChatMessages([
-      { role: 'model', text: CHAT_GREETINGS[activeLang] }
-    ]);
+    // Resume an existing conversation if one is in progress; otherwise greet.
+    setChatMessages(prev =>
+      prev.length > 0 ? prev : [{ role: 'model', text: CHAT_GREETINGS[activeLang] }]
+    );
   };
 
   const handleSelectStyleInShowcase = (style: DesignStyle) => {
