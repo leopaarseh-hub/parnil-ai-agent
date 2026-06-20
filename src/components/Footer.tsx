@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Mail, Phone, MapPin, Instagram } from 'lucide-react';
+import { Shield, Mail, Phone, MapPin, Instagram, Linkedin } from 'lucide-react';
 import ParnilLogo from './ParnilLogo';
 import { SupportedLang } from '../utils/translations';
 
@@ -13,6 +13,7 @@ const MAIN_SITE = 'https://parnil.co';
 const CONTACT_EMAIL = 'info@parnil.co';
 const CONTACT_PHONE = '+49 163 384 9414';
 const INSTAGRAM_URL = 'https://instagram.com/parnil.co';
+const LINKEDIN_URL = 'https://www.linkedin.com/company/parnil/';
 
 const LOCAL_FOOTER_TRANSLATIONS: Record<SupportedLang, {
   tagline: string;
@@ -123,15 +124,26 @@ export default function Footer({ onStartGenerator, activeLang = 'de' }: FooterPr
             <p className="text-sm text-brand-paper/60 max-w-sm leading-relaxed font-sans font-light">
               {tr.tagline}
             </p>
-            <a
-              href={INSTAGRAM_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Instagram"
-              className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-surface-raised border border-brand-paper/10 text-brand-paper/60 hover:text-brand-acid hover:border-brand-acid/40 transition-all cursor-pointer"
-            >
-              <Instagram className="h-4.5 w-4.5" />
-            </a>
+            <div className="flex items-center gap-3">
+              <a
+                href={INSTAGRAM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram"
+                className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-surface-raised border border-brand-paper/10 text-brand-paper/60 hover:text-brand-acid hover:border-brand-acid/40 transition-all cursor-pointer"
+              >
+                <Instagram className="h-4.5 w-4.5" />
+              </a>
+              <a
+                href={LINKEDIN_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="LinkedIn"
+                className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-surface-raised border border-brand-paper/10 text-brand-paper/60 hover:text-brand-acid hover:border-brand-acid/40 transition-all cursor-pointer"
+              >
+                <Linkedin className="h-4.5 w-4.5" />
+              </a>
+            </div>
           </div>
 
           {/* Navigation */}
