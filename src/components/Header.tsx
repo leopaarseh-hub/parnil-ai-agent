@@ -92,8 +92,10 @@ export default function Header({ onNavigateHome, activeLang, onChangeLang }: Hea
     { label: tr.contact, href: `${MAIN_SITE}/#contact` }
   ];
 
+  // Match parnil.co's .nav-links a: DM Sans, 0.8rem, weight 500, subtle
+  // tracking, normal case (not uppercase).
   const linkBase =
-    "text-xs tracking-wider uppercase font-mono transition-colors";
+    "font-sans text-[0.8rem] font-medium tracking-[0.02em] transition-colors";
   const linkIdle = "text-brand-paper/65 hover:text-brand-paper";
   const linkActive = "text-brand-acid";
 
@@ -224,7 +226,7 @@ export default function Header({ onNavigateHome, activeLang, onChangeLang }: Hea
                   key={item.label}
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
-                  className={`px-3 py-3 rounded-xl text-sm font-mono uppercase tracking-wider transition-colors ${
+                  className={`px-3 py-3 rounded-xl text-sm font-sans font-medium tracking-[0.02em] transition-colors ${
                     item.active ? 'text-brand-acid bg-brand-acid/10' : 'text-brand-paper/70 hover:text-brand-paper hover:bg-brand-paper/5'
                   }`}
                 >
@@ -238,7 +240,7 @@ export default function Header({ onNavigateHome, activeLang, onChangeLang }: Hea
                     item.action();
                     setMobileOpen(false);
                   }}
-                  className={`px-3 py-3 rounded-xl text-sm font-mono uppercase tracking-wider transition-colors ${
+                  className={`px-3 py-3 rounded-xl text-sm font-sans font-medium tracking-[0.02em] transition-colors ${
                     isRtl ? 'text-right' : 'text-left'
                   } ${
                     item.active ? 'text-brand-acid bg-brand-acid/10' : 'text-brand-paper/70 hover:text-brand-paper hover:bg-brand-paper/5'
