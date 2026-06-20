@@ -71,3 +71,66 @@ html, body {
   scroll-behavior: smooth;
 }
 
+/* Fractal-noise grain overlay covering the whole viewport (matches parnil.co). */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9998;
+  opacity: 0.5;
+}
+
+/* Custom cursor: lime dot + trailing ring (matches parnil.co). */
+.cursor,
+.cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  mix-blend-mode: exclusion;
+}
+.cursor {
+  width: 10px;
+  height: 10px;
+  background: var(--color-brand-acid);
+  border-radius: 50%;
+  z-index: 99999;
+  transition: width 0.2s, height 0.2s, opacity 0.2s;
+}
+.cursor-ring {
+  width: 40px;
+  height: 40px;
+  border: 1.5px solid var(--color-brand-acid);
+  border-radius: 50%;
+  z-index: 99998;
+  transition: width 0.2s, height 0.2s, opacity 0.2s, background 0.2s;
+}
+/* Grow over interactive targets. */
+.cursor.is-hover {
+  width: 18px;
+  height: 18px;
+  opacity: 0.6;
+}
+.cursor-ring.is-hover {
+  width: 56px;
+  height: 56px;
+  background: rgba(200, 255, 0, 0.08);
+}
+/* Hide the system pointer only where the custom cursor is active. */
+@media (hover: hover) and (pointer: fine) {
+  html.has-custom-cursor,
+  html.has-custom-cursor * {
+    cursor: none !important;
+  }
+}
+/* No custom cursor on touch / coarse-pointer devices. */
+@media (hover: none), (pointer: coarse) {
+  .cursor,
+  .cursor-ring {
+    display: none;
+  }
+}
+

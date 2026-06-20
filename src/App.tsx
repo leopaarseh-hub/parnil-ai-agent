@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import CustomCursor from './components/CustomCursor';
 import ThemeShowcase from './components/ThemeShowcase';
 import BriefDocument from './components/BriefDocument';
 import { FormState, DesignStyle, GeneratedBrief } from './types';
@@ -430,7 +431,9 @@ export default function App() {
       className={`min-h-screen bg-brand-ink flex flex-col justify-between selection:bg-brand-acid selection:text-brand-ink ${activeLang === 'fa' ? 'font-fa' : ''}`}
       style={activeLang === 'fa' ? { fontFamily: '"Vazirmatn", sans-serif' } : undefined}
     >
-      
+      {/* Custom lime cursor (dot + trailing ring) on fine-pointer devices */}
+      <CustomCursor />
+
       {/* Absolute background mesh glow for the entire applet */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[600px] bg-gradient-to-b from-brand-500/5 via-transparent to-transparent blur-[150px] pointer-events-none -z-20" />
 
