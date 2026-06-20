@@ -229,10 +229,10 @@ export const TRANSLATIONS: Record<SupportedLang, TranslationDict> = {
     parnilSitemapLink: "parnil.studio/flagship/aether-dashboard",
     backToHome: "Zurück zur Startseite",
 
-    heroHeadingStart: "Websites, die Ihr",
+    heroHeadingStart: "KI-Berater für Ihr",
     heroHeadingAccent: "Wachstum",
-    heroHeadingEnd: "beschleunigen.",
-    heroDescription: "Bei Parnil Studio verschmelzen wir technologische Höchstleistung mit maßgeschneiderter Typografie. Nutzen Sie unseren interaktiven Generator, um in weniger als 3 Minuten eine abgestimmte visuelle und technische Spezifikation für Ihr Unternehmen zu erstellen.",
+    heroHeadingEnd: "in 3 Minuten.",
+    heroDescription: "Führen Sie ein kurzes Gespräch mit dem KI-Wachstumsberater von Parnil. Er analysiert Ihr Unternehmen und liefert Ihnen in unter 3 Minuten eine maßgeschneiderte Strategie, einen Website-Plan und eine klare Investitionsschätzung. Starten Sie unten.",
 
     awardsNum: "34+",
     awardsLabel: "Internationale Design-Auszeichnungen",
@@ -425,10 +425,10 @@ export const TRANSLATIONS: Record<SupportedLang, TranslationDict> = {
     parnilSitemapLink: "parnil.studio/flagship/aether-dashboard",
     backToHome: "Back to home",
 
-    heroHeadingStart: "Websites That",
-    heroHeadingAccent: "Accelerate",
-    heroHeadingEnd: "Your Growth.",
-    heroDescription: "At Parnil Studio, we merge raw technological performance with bespoke typography. Use our interactive generator tool beneath to compile an aligned visual and technical specification for your business in under 3 minutes.",
+    heroHeadingStart: "Your AI Growth",
+    heroHeadingAccent: "Consultant",
+    heroHeadingEnd: "in 3 Minutes.",
+    heroDescription: "Have a quick chat with Parnil's AI growth consultant. It analyzes your business and hands you a tailored strategy, website plan, and clear investment estimate — in under 3 minutes. Start below.",
 
     awardsNum: "34+",
     awardsLabel: "International visual design awards",
@@ -621,10 +621,10 @@ export const TRANSLATIONS: Record<SupportedLang, TranslationDict> = {
     parnilSitemapLink: "parnil.studio/flagship/aether-dashboard",
     backToHome: "Ana sayfaya dön",
 
-    heroHeadingStart: "Büyümenizi",
-    heroHeadingAccent: "Hızlandıran",
-    heroHeadingEnd: "Web Siteleri.",
-    heroDescription: "Parnil Studio'da, ham teknolojik performansı özel tipografiyle birleştiriyoruz. İşiniz için uyumlu bir görsel ve teknik şartnameyi 3 dakikadan kısa sürede derlemek için aşağıdaki etkileşimli jeneratör aracımızı kullanın.",
+    heroHeadingStart: "Yapay Zeka",
+    heroHeadingAccent: "Büyüme Danışmanınız",
+    heroHeadingEnd: "3 Dakikada.",
+    heroDescription: "Parnil'in yapay zeka büyüme danışmanıyla kısa bir sohbet edin. İşletmenizi analiz eder ve 3 dakikadan kısa sürede size özel bir strateji, web sitesi planı ve net bir yatırım tahmini sunar. Aşağıdan başlayın.",
 
     awardsNum: "34+",
     awardsLabel: "Uluslararası görsel tasarım ödülü",
@@ -817,10 +817,10 @@ export const TRANSLATIONS: Record<SupportedLang, TranslationDict> = {
     parnilSitemapLink: "parnil.studio/flagship/aether-dashboard",
     backToHome: "بازگشت به خانه",
 
-    heroHeadingStart: "وب‌سایت‌هایی برای",
-    heroHeadingAccent: "رشد",
-    heroHeadingEnd: "سریع کسب‌وکار شما.",
-    heroDescription: "در استودیو پارنیل، ما کدهای عملکرد فنی عالی را با تایپوگرافی منحصربه‌فرد پیوند می‌دهیم. از ابزار تعاملی زیر استفاده کنید تا یک بریف هم‌راستای بصری و فنی را در کمتر از ۳ دقیقه برای کسب‌وکار خود تدوین کنید.",
+    heroHeadingStart: "مشاور رشد",
+    heroHeadingAccent: "هوش مصنوعی",
+    heroHeadingEnd: "در ۳ دقیقه.",
+    heroDescription: "با مشاور رشد هوش مصنوعی پارنیل گفتگوی کوتاهی داشته باشید. کسب‌وکار شما را تحلیل می‌کند و در کمتر از ۳ دقیقه استراتژی اختصاصی، طرح وب‌سایت و برآورد سرمایه‌گذاری شفاف به شما می‌دهد. از پایین شروع کنید.",
 
     awardsNum: "34+",
     awardsLabel: "جوایز بین‌المللی طراحی بصری",
