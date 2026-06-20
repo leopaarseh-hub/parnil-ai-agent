@@ -231,7 +231,7 @@ export const TRANSLATIONS: Record<SupportedLang, TranslationDict> = {
 
     heroHeadingStart: "KI-Berater für Ihr",
     heroHeadingAccent: "Wachstum",
-    heroHeadingEnd: "in 3 Minuten.",
+    heroHeadingEnd: "in 3 Minuten",
     heroDescription: "Führen Sie ein kurzes Gespräch mit dem KI-Wachstumsberater von Parnil. Er analysiert Ihr Unternehmen und liefert Ihnen in unter 3 Minuten eine maßgeschneiderte Strategie, einen Website-Plan und eine klare Investitionsschätzung. Starten Sie unten.",
 
     awardsNum: "34+",
@@ -427,7 +427,7 @@ export const TRANSLATIONS: Record<SupportedLang, TranslationDict> = {
 
     heroHeadingStart: "Your AI Growth",
     heroHeadingAccent: "Consultant",
-    heroHeadingEnd: "in 3 Minutes.",
+    heroHeadingEnd: "in 3 Minutes",
     heroDescription: "Have a quick chat with Parnil's AI growth consultant. It analyzes your business and hands you a tailored strategy, website plan, and clear investment estimate — in under 3 minutes. Start below.",
 
     awardsNum: "34+",
@@ -623,7 +623,7 @@ export const TRANSLATIONS: Record<SupportedLang, TranslationDict> = {
 
     heroHeadingStart: "Yapay Zeka",
     heroHeadingAccent: "Büyüme Danışmanınız",
-    heroHeadingEnd: "3 Dakikada.",
+    heroHeadingEnd: "3 Dakikada",
     heroDescription: "Parnil'in yapay zeka büyüme danışmanıyla kısa bir sohbet edin. İşletmenizi analiz eder ve 3 dakikadan kısa sürede size özel bir strateji, web sitesi planı ve net bir yatırım tahmini sunar. Aşağıdan başlayın.",
 
     awardsNum: "34+",
@@ -819,7 +819,7 @@ export const TRANSLATIONS: Record<SupportedLang, TranslationDict> = {
 
     heroHeadingStart: "مشاور رشد",
     heroHeadingAccent: "هوش مصنوعی",
-    heroHeadingEnd: "در ۳ دقیقه.",
+    heroHeadingEnd: "در ۳ دقیقه",
     heroDescription: "با مشاور رشد هوش مصنوعی پارنیل گفتگوی کوتاهی داشته باشید. کسب‌وکار شما را تحلیل می‌کند و در کمتر از ۳ دقیقه استراتژی اختصاصی، طرح وب‌سایت و برآورد سرمایه‌گذاری شفاف به شما می‌دهد. از پایین شروع کنید.",
 
     awardsNum: "34+",
