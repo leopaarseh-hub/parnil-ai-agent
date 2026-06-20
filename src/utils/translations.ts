@@ -229,9 +229,9 @@ export const TRANSLATIONS: Record<SupportedLang, TranslationDict> = {
     parnilSitemapLink: "parnil.studio/flagship/aether-dashboard",
     backToHome: "Zurück zur Startseite",
 
-    heroHeadingStart: "Verlieren Sie keine Kunden mehr",
-    heroHeadingAccent: "an veraltete Websites.",
-    heroHeadingEnd: "Erstellen Sie jetzt Ihren Blueprint.",
+    heroHeadingStart: "Websites, die Ihr",
+    heroHeadingAccent: "Wachstum",
+    heroHeadingEnd: "beschleunigen.",
     heroDescription: "Bei Parnil Studio verschmelzen wir technologische Höchstleistung mit maßgeschneiderter Typografie. Nutzen Sie unseren interaktiven Generator, um in weniger als 3 Minuten eine abgestimmte visuelle und technische Spezifikation für Ihr Unternehmen zu erstellen.",
 
     awardsNum: "34+",
@@ -425,9 +425,9 @@ export const TRANSLATIONS: Record<SupportedLang, TranslationDict> = {
     parnilSitemapLink: "parnil.studio/flagship/aether-dashboard",
     backToHome: "Back to home",
 
-    heroHeadingStart: "Stop Losing Customers",
-    heroHeadingAccent: "To Outdated Websites.",
-    heroHeadingEnd: "Build Your Blueprint Now.",
+    heroHeadingStart: "Websites That",
+    heroHeadingAccent: "Accelerate",
+    heroHeadingEnd: "Your Growth.",
     heroDescription: "At Parnil Studio, we merge raw technological performance with bespoke typography. Use our interactive generator tool beneath to compile an aligned visual and technical specification for your business in under 3 minutes.",
 
     awardsNum: "34+",
@@ -621,9 +621,9 @@ export const TRANSLATIONS: Record<SupportedLang, TranslationDict> = {
     parnilSitemapLink: "parnil.studio/flagship/aether-dashboard",
     backToHome: "Ana sayfaya dön",
 
-    heroHeadingStart: "Eski Web Siteleri Yüzünden",
-    heroHeadingAccent: "Müşteri Kaybetmeyi Durdurun.",
-    heroHeadingEnd: "Şimdi Planınızı Oluşturun.",
+    heroHeadingStart: "Büyümenizi",
+    heroHeadingAccent: "Hızlandıran",
+    heroHeadingEnd: "Web Siteleri.",
     heroDescription: "Parnil Studio'da, ham teknolojik performansı özel tipografiyle birleştiriyoruz. İşiniz için uyumlu bir görsel ve teknik şartnameyi 3 dakikadan kısa sürede derlemek için aşağıdaki etkileşimli jeneratör aracımızı kullanın.",
 
     awardsNum: "34+",
@@ -817,9 +817,9 @@ export const TRANSLATIONS: Record<SupportedLang, TranslationDict> = {
     parnilSitemapLink: "parnil.studio/flagship/aether-dashboard",
     backToHome: "بازگشت به خانه",
 
-    heroHeadingStart: "به هدر رفتن مشتریان خود",
-    heroHeadingAccent: "توسط سایت‌های قدیمی پایان دهید.",
-    heroHeadingEnd: "همین حالا استراتژی خود را بسازید.",
+    heroHeadingStart: "وب‌سایت‌هایی برای",
+    heroHeadingAccent: "رشد",
+    heroHeadingEnd: "سریع کسب‌وکار شما.",
     heroDescription: "در استودیو پارنیل، ما کدهای عملکرد فنی عالی را با تایپوگرافی منحصربه‌فرد پیوند می‌دهیم. از ابزار تعاملی زیر استفاده کنید تا یک بریف هم‌راستای بصری و فنی را در کمتر از ۳ دقیقه برای کسب‌وکار خود تدوین کنید.",
 
     awardsNum: "34+",
