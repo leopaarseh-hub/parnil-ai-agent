@@ -452,12 +452,6 @@ export default function App() {
             
             {/* HERO HEROICS */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 text-center space-y-8 relative">
-              
-              {/* Launcher announcement badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#0E1520] border border-brand-paper/10 text-[10px] tracking-widest text-[#00C2FF] uppercase font-mono font-bold">
-                <span className="w-1.5 h-1.5 rounded-full bg-brand-acid animate-pulse"></span>
-                <span>{t.exclusiveInterfaceScoping}</span>
-              </div>
 
               {/* Bold Editorial Typography */}
               <h1 className="text-4xl sm:text-6xl lg:text-7.5xl font-extrabold tracking-tight text-brand-paper font-display max-w-5xl mx-auto leading-[1.1] sm:leading-[1.05] space-y-1 sm:space-y-2">
