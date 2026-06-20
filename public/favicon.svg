@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Parnil">
   <!-- Lime rounded-square brand tile -->
-  <rect x="0" y="0" width="100" height="100" rx="22" fill="#C8FF00"/>
-  <!-- Black eye mark (matches the Parnil logo), centered with padding -->
-  <g transform="translate(50 50) scale(0.86) translate(-50 -48.5)" fill="#050A14">
+  <rect x="0" y="0" width="100" height="100" rx="20" fill="#C8FF00"/>
+  <!-- Black eye mark, upper-centered to leave room for the wordmark -->
+  <g transform="translate(50 42) scale(0.64) translate(-50 -48.5)" fill="#050A14">
     <!-- Upper eyelid -->
     <path d="M 10 50 C 30 25, 70 25, 90 50 C 70 32, 30 32, 10 50 Z"/>
     <!-- Lower eyelid -->
@@ -15,4 +15,8 @@
       <circle cx="0" cy="5.5" r="2.2"/>
     </g>
   </g>
+  <!-- PARNIL wordmark -->
+  <text x="50" y="82" text-anchor="middle" fill="#050A14"
+        font-family="Arial, Helvetica, sans-serif" font-weight="700"
+        font-size="16" letter-spacing="1.5">PARNIL</text>
 </svg>
