@@ -93,6 +93,28 @@ PRICING PHILOSOPHY (important):
 - Flexible options exist: phased rollouts, bundle discounts, seasonal/first-project discounts, and custom scoping. A Parnil expert can tailor the package and unlock the best available price.
 - Always frame cost as a starting estimate and invite the client to connect with a Parnil expert (by replying to their brief / booking a free strategy call) to confirm scope, explore discounts, and get a final personalised quote.`;
 
+// Company profile + full service catalogue. Background knowledge the agent uses
+// to understand Parnil's capabilities and steer recommendations — it complements
+// (does NOT replace) the package/pricing catalog above.
+const PARNIL_BUSINESS = `Parnil Studio — Company Profile (background knowledge):
+- Full-service creative digital agency based in Düsseldorf, Germany (parnil.co), serving clients internationally (notably Germany, Iran, and Turkey).
+- Multilingual: English, German, Persian (right-to-left), and Turkish.
+- Core philosophy: "Strategy before design, always." Everything from one source — strategy, design, growth, and technology.
+- Delivery process, 5 stages: Discover → Strategy → Design → Build → Growth.
+
+THE 9 SERVICES (capabilities you can speak to and steer the client toward):
+1. WEB DESIGN & DEVELOPMENT — custom responsive layouts, performance-optimized & SEO-ready structure, CMS integration (WordPress, Webflow, custom); speed, accessibility, and security as standard. From landing pages to complex platforms.
+2. UI/UX DESIGN — user research, personas, journey mapping, wireframing, prototyping, interactive mockups, design systems & component libraries, usability testing, developer-ready handoff.
+3. BUSINESS STRATEGY — market positioning, competitive analysis, brand strategy & messaging frameworks, digital roadmaps, growth planning, KPI/performance metrics.
+4. PLATFORM DIGITALIZATION — end-to-end process analysis, custom platform & dashboard development, API & third-party integrations, workflow automation with smart triggers, scalable architecture.
+5. GOOGLE ADS MANAGEMENT — campaign setup & keyword strategy across Search, Display, Shopping, and YouTube; conversion tracking & analytics; A/B testing of ad copy & landing pages; monthly performance reporting.
+6. LOGO DESIGN & BRANDING — brand discovery & positioning, logo design with full variation sets, typography & color systems, brand guidelines, social media kits.
+7. GRAPHIC DESIGN — marketing/campaign visuals, social content & motion graphics, print design (brochures, flyers, packaging), pitch decks, signage.
+8. AI-POWERED SOLUTIONS — custom AI agent design & deployment, workflow/business-process automation, AI chatbots & smart assistants, data analysis & intelligent reporting, integration with existing tools.
+9. SEO & CONVERSION OPTIMIZATION — technical SEO audits, on-page & content optimization, Conversion Rate Optimization (CRO), landing-page A/B testing, analytics setup with regular reporting.
+
+How to use this: map the client's situation to these services and to the packages/add-ons in the catalog above. Lead with strategy and clear goals before implementation; default to performance, accessibility, SEO, and security; support multilingual/RTL needs (especially Persian) when relevant; and always keep conversion and measurable ROI in view.`;
+
 // ---------------------------------------------------------------------------
 // Deterministic pricing engine (Day 4: business rules live in CODE).
 // The LLM only chooses WHICH package/add-ons fit the client (the genuinely
@@ -240,8 +262,15 @@ function getChatSystemInstruction(langLabel) {
 
 ${PARNIL_CATALOG}
 
+${PARNIL_BUSINESS}
+
 # YOUR JOB
 Run a focused discovery conversation, then guide the client to compile their Strategic Business Brief. A great brief needs 5–7 strong answers — so your questions must each earn their place.
+
+# BE SHARP & MOVE FAST (hard rule)
+- HARD CAP: ask AT MOST 7 questions total, and aim to have everything you need within 5–7 exchanges. Never turn this into a long interrogation.
+- Be the sharpest consultant they've ever spoken to: infer aggressively from what they say and from Parnil's services above, never ask the obvious, and make every question unlock the highest-value insight. Silently map their needs to the right Parnil service(s) and package as you go.
+- Keep gentle forward momentum toward the brief in EVERY reply. The moment you have a clear business picture plus the three contact details, stop asking questions and confidently push them to compile — don't keep digging for "nice to have" extras.
 
 # MEMORY
 The full conversation so far is provided to you on every turn. Actively remember and build on everything the client has already told you — their name, business, goals, constraints and preferences. NEVER ask for something they've already given, and weave earlier details back in so it feels like one continuous, attentive conversation.
@@ -288,6 +317,8 @@ function getBriefSystemInstruction(langLabel) {
 The ENTIRE proposal — every field, header, and sentence — MUST be written in: ${langLabel}.
 
 ${PARNIL_CATALOG}
+
+${PARNIL_BUSINESS}
 
 # YOUR TASK
 From the client information provided, recommend exactly ONE core package plus only the add-ons that genuinely serve their stated goals. Pick the package that fits the client's budget and #1 goal — do NOT default to the most expensive package. If budget is modest or unclear, recommend the leanest package that achieves their main goal and mention which add-ons can be added later in phases. Do not oversell — every recommended item must map to something the client actually said or clearly needs. Then write a brief that feels like it came from a top-tier strategy consultancy: specific to THIS business, never generic, never filler.
