@@ -216,6 +216,128 @@ function buildInvestmentCardHTML(quote, lang) {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Native Gemini function calling for pricing (additive, safe-by-default).
+//
+// The model may call calculate_quote(packageId, addonIds); the server executes
+// it against the SAME deterministic computeQuote engine above — the single
+// source of truth. The price is ALWAYS computed in code, never by the model.
+// Controlled by ENABLE_PRICING_TOOL_CALL (default ON). Any failure, unsupported
+// model, or invalid args falls back to the original JSON-key pricing flow, so
+// totals are identical to before. No secrets are involved.
+// ---------------------------------------------------------------------------
+
+// Tool the model is allowed to call. Args mirror computeQuote's inputs.
+const CALCULATE_QUOTE_TOOL = {
+  name: "calculate_quote",
+  description:
+    "Compute the exact, authoritative Parnil Studio investment quote for a chosen core package and add-ons. Always use this to price a recommendation; never compute prices yourself.",
+  parameters: {
+    type: "object",
+    properties: {
+      packageId: {
+        type: "string",
+        description:
+          "The core package key. One of: " + Object.keys(PACKAGES).join(", ") + ".",
+      },
+      addonIds: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "Zero or more add-on keys from the catalog, e.g. " +
+          Object.keys(ADDONS).slice(0, 4).join(", ") + ", ...",
+      },
+    },
+    required: ["packageId"],
+  },
+};
+
+// Tool handler. Pure + safe: coerces args, then delegates to computeQuote
+// (which already falls back to 'presence' for unknown packages and ignores
+// unknown add-on keys). Never throws.
+function executeCalculateQuote(args) {
+  const a = args || {};
+  const packageId = typeof a.packageId === "string" ? a.packageId : "";
+  const addonIds = Array.isArray(a.addonIds)
+    ? a.addonIds.filter((x) => typeof x === "string")
+    : [];
+  return computeQuote(packageId, addonIds);
+}
+
+// Decide which quote to use: the tool result when it's a valid quote object,
+// otherwise the deterministic computeQuote fallback (the original flow). Pure.
+function pickQuoteFromToolResult(toolQuote, packageKey, addOnKeys) {
+  const valid =
+    toolQuote &&
+    typeof toolQuote === "object" &&
+    typeof toolQuote.oneTimeTotal === "number" &&
+    typeof toolQuote.packageKey === "string";
+  return valid ? toolQuote : computeQuote(packageKey, addOnKeys);
+}
+
+function pricingToolCallEnabled() {
+  // Default ON; ENABLE_PRICING_TOOL_CALL="0"/"false" fully disables it.
+  const v = process.env.ENABLE_PRICING_TOOL_CALL;
+  if (v === undefined || v === null || v === "") return true;
+  const s = String(v).trim().toLowerCase();
+  return s !== "0" && s !== "false" && s !== "off" && s !== "no";
+}
+
+// Run ONE native-tool-calling round so the model invokes calculate_quote with
+// the recommended selection; the server executes it deterministically. Returns
+// a quote object, or null to signal "fall back to the JSON-key flow". Never
+// throws. This is a SEPARATE request from brief generation (which uses JSON
+// response mode and therefore cannot also carry tools).
+async function runQuoteToolCall(ai, packageKey, addOnKeys) {
+  try {
+    const keys = Array.isArray(addOnKeys) ? addOnKeys : [];
+    const prompt =
+      "Price this Parnil Studio recommendation by calling calculate_quote. " +
+      "packageId=" + JSON.stringify(packageKey) +
+      ", addonIds=" + JSON.stringify(keys) + ".";
+    const response = await generateWithFallback(ai, {
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      config: {
+        temperature: 0,
+        maxOutputTokens: 256,
+        thinkingConfig: { thinkingBudget: 0 },
+        tools: [{ functionDeclarations: [CALCULATE_QUOTE_TOOL] }],
+        toolConfig: {
+          functionCallingConfig: { mode: "ANY", allowedFunctionNames: ["calculate_quote"] },
+        },
+      },
+    });
+
+    // Extract the function call across SDK response shapes.
+    let call = null;
+    if (Array.isArray(response.functionCalls) && response.functionCalls.length) {
+      call = response.functionCalls[0];
+    } else {
+      const parts =
+        (response.candidates &&
+          response.candidates[0] &&
+          response.candidates[0].content &&
+          response.candidates[0].content.parts) ||
+        [];
+      const fcPart = parts.find((p) => p && p.functionCall);
+      if (fcPart) call = fcPart.functionCall;
+    }
+    if (!call || call.name !== "calculate_quote") return null;
+
+    const args = typeof call.args === "string" ? JSON.parse(call.args) : call.args;
+    const quote = executeCalculateQuote(args);
+    log("info", "pricing_tool_call_ok", {
+      package: quote.packageKey,
+      addons: quote.addOns.length,
+    });
+    return quote;
+  } catch (err) {
+    // Any problem → fall back to the JSON-key flow (non-breaking).
+    log("warn", "pricing_tool_call_fallback", { message: err && err.message });
+    return null;
+  }
+}
+
 class ClientError extends Error {
   constructor(message, status = 400) {
     super(message);
@@ -677,7 +799,23 @@ Generate the customized Parnil Studio Strategic Business Brief now, as a single 
   // didn't return a valid package key, fall back to whatever summary it wrote
   // (non-breaking). The model is never trusted to do money math.
   if (briefData.recommendedPackage && PACKAGES[briefData.recommendedPackage]) {
-    const quote = computeQuote(briefData.recommendedPackage, briefData.recommendedAddOns);
+    // Prefer native tool calling (model invokes calculate_quote, server executes
+    // it via computeQuote). On any failure / disabled flag, fall back to the
+    // original direct computeQuote flow. Both paths use the SAME engine, so the
+    // numbers are identical.
+    let toolQuote = null;
+    if (pricingToolCallEnabled()) {
+      toolQuote = await runQuoteToolCall(
+        ai,
+        briefData.recommendedPackage,
+        briefData.recommendedAddOns
+      );
+    }
+    const quote = pickQuoteFromToolResult(
+      toolQuote,
+      briefData.recommendedPackage,
+      briefData.recommendedAddOns
+    );
     briefData.quote = quote; // structured, machine-checkable
     briefData.budgetRange = quote.monthlyTotal
       ? `${euro(quote.oneTimeTotal)} + ${euro(quote.monthlyTotal)}/mo`
@@ -787,6 +925,10 @@ module.exports._internals = {
   computeQuote,
   buildInvestmentCardHTML,
   saveLead,
+  executeCalculateQuote,
+  pickQuoteFromToolResult,
+  pricingToolCallEnabled,
+  CALCULATE_QUOTE_TOOL,
   PACKAGES,
   ADDONS,
   LIMITS,

@@ -50,12 +50,22 @@ deterministic-vs-LLM split, and **[SECURITY.md](./SECURITY.md)** for the threat 
 |------|-------|
 | Orchestration / routing | `handler`, `resolveAction` — `api/index.js` |
 | Deterministic pricing | `computeQuote`, `buildInvestmentCardHTML` — `api/index.js` |
+| Native tool calling (pricing) | `calculate_quote` → `executeCalculateQuote` / `runQuoteToolCall` — `api/index.js` |
 | Guardrails (caps + injection flag + PII redaction) | `validateMessages`, `looksLikeInjection`, `redactPII` |
 | Observability (structured logs + request id) | `log`, `newRequestId` |
 | Memory (same-device resume) | `SESSION_KEY` — `src/App.tsx` |
 | Skills | `skills/*/SKILL.md` |
 | Specs (Gherkin source of truth) | `specs/*.feature` |
 | Evals | `evals/*.test.js` |
+
+### Agent tooling
+The agent uses **native Gemini function calling** for pricing: the model calls a
+`calculate_quote(packageId, addonIds)` tool, which the server executes against the
+deterministic `computeQuote` engine — so the final price is always computed in code,
+never by the model. It is enabled by default and can be disabled instantly with
+`ENABLE_PRICING_TOOL_CALL=0`, which falls back to the original JSON-key pricing flow.
+This project does **not yet** use the full Google ADK or MCP; the deterministic tools
+are clean, typed boundaries designed to map onto ADK skills / MCP servers as a next step.
 
 ## Lead capture (optional)
 If `SUPABASE_URL` + an insert-capable key are set (see `.env.example`), every brief

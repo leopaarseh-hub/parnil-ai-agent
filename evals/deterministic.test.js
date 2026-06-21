@@ -39,6 +39,74 @@ test("pricing: investment card contains computed total", () => {
   assert.ok(html.includes("1,577")); // 1428 + 149
 });
 
+// --- Native tool calling: calculate_quote (computeQuote stays the truth) ---
+test("tool: calculate_quote succeeds and matches computeQuote", () => {
+  const q = X.executeCalculateQuote({ packageId: "momentum", addonIds: ["seo_setup"] });
+  assert.strictEqual(q.oneTimeTotal, 1577); // 1428 + 149
+  assert.deepStrictEqual(q, X.computeQuote("momentum", ["seo_setup"]));
+});
+
+test("tool: invalid packageId falls back to presence safely", () => {
+  const q = X.executeCalculateQuote({ packageId: "enterprise", addonIds: [] });
+  assert.strictEqual(q.packageKey, "presence");
+  assert.strictEqual(q.oneTimeTotal, 948);
+});
+
+test("tool: invalid/garbage add-ons and non-array args never throw", () => {
+  const q1 = X.executeCalculateQuote({ packageId: "presence", addonIds: ["__nope__", "blog"] });
+  assert.strictEqual(q1.oneTimeTotal, 948 + 129);
+  assert.strictEqual(q1.addOns.length, 1);
+  // addonIds not an array → treated as empty; missing args → safe defaults.
+  const q2 = X.executeCalculateQuote({ packageId: "presence", addonIds: null });
+  assert.strictEqual(q2.oneTimeTotal, 948);
+  const q3 = X.executeCalculateQuote(undefined);
+  assert.strictEqual(q3.packageKey, "presence");
+});
+
+test("tool: fallback path uses computeQuote when no tool result", () => {
+  const fallback = X.pickQuoteFromToolResult(null, "momentum", ["seo_setup"]);
+  assert.deepStrictEqual(fallback, X.computeQuote("momentum", ["seo_setup"]));
+  // A valid tool quote is passed through unchanged.
+  const toolQuote = X.executeCalculateQuote({ packageId: "authority", addonIds: ["monthly_reporting"] });
+  const picked = X.pickQuoteFromToolResult(toolQuote, "presence", []);
+  assert.strictEqual(picked, toolQuote);
+  // Invalid tool result (e.g. model junk) is rejected in favour of code.
+  const bad = X.pickQuoteFromToolResult({ oneTimeTotal: "free" }, "presence", []);
+  assert.deepStrictEqual(bad, X.computeQuote("presence", []));
+});
+
+test("tool: pricing totals are unchanged vs computeQuote across combos", () => {
+  const combos = [
+    ["presence", []],
+    ["momentum", ["seo_setup", "online_shop"]],
+    ["authority", ["monthly_reporting", "ai_chatbot"]],
+    ["momentum", ["__bad__", "blog"]],
+  ];
+  for (const [pkg, addons] of combos) {
+    assert.deepStrictEqual(
+      X.executeCalculateQuote({ packageId: pkg, addonIds: addons }),
+      X.computeQuote(pkg, addons)
+    );
+  }
+});
+
+test("tool: ENABLE_PRICING_TOOL_CALL flag toggles correctly", () => {
+  const orig = process.env.ENABLE_PRICING_TOOL_CALL;
+  try {
+    delete process.env.ENABLE_PRICING_TOOL_CALL;
+    assert.strictEqual(X.pricingToolCallEnabled(), true); // default ON
+    process.env.ENABLE_PRICING_TOOL_CALL = "0";
+    assert.strictEqual(X.pricingToolCallEnabled(), false);
+    process.env.ENABLE_PRICING_TOOL_CALL = "false";
+    assert.strictEqual(X.pricingToolCallEnabled(), false);
+    process.env.ENABLE_PRICING_TOOL_CALL = "1";
+    assert.strictEqual(X.pricingToolCallEnabled(), true);
+  } finally {
+    if (orig === undefined) delete process.env.ENABLE_PRICING_TOOL_CALL;
+    else process.env.ENABLE_PRICING_TOOL_CALL = orig;
+  }
+});
+
 // --- PII redaction --------------------------------------------------------
 test("redaction: masks emails and phone numbers", () => {
   const out = X.redactPII("ali@parnil.com / +49 170 1234567");

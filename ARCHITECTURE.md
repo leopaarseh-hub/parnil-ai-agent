@@ -36,6 +36,13 @@ client → POST /api/{chat-consultant,generate-brief}
 
 The LLM is never trusted to do arithmetic or routing.
 
+**Native tool calling (pricing).** The model invokes a `calculate_quote(packageId,
+addonIds)` function via native Gemini function calling; the server executes it against
+the same `computeQuote` engine, so the price is still computed in code. Controlled by
+`ENABLE_PRICING_TOOL_CALL` (default ON); on any failure or when disabled it falls back
+to the original JSON-key flow, producing identical totals. The project does not yet use
+full ADK or MCP — these typed tool boundaries are the intended mapping point for them.
+
 ## Memory & context (Day 3)
 - **Always-on context**: the full transcript is sent every turn (no context rot
   from truncation at this scale) + a compact system prompt with the catalog.
