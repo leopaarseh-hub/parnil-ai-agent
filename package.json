@@ -10,6 +10,7 @@
     "lint": "tsc --noEmit",
     "eval": "node --test evals/*.test.js",
     "eval:live": "node --test evals/live.test.js",
+    "eval:judge": "node evals/judge.js",
     "demo": "node scripts/demo.js"
   },
   "dependencies": {
