@@ -208,7 +208,7 @@ async function main() {
     process.stdout.write("judging... ");
     const resp = await judgeWithFallback(ai, {
       contents: [{ role: "user", parts: [{ text: buildJudgePrompt(brief) }] }],
-      config: { systemInstruction: JUDGE_SYSTEM, temperature: 0, responseMimeType: "application/json", maxOutputTokens: 1024 },
+      config: { systemInstruction: JUDGE_SYSTEM, temperature: 0, responseMimeType: "application/json", maxOutputTokens: 2048, thinkingConfig: { thinkingBudget: 0 } },
     });
     let verdict;
     try {

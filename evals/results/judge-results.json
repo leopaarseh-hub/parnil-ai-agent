@@ -1,0 +1,67 @@
+{
+  "generatedAt": "2026-06-23T22:37:18.172Z",
+  "judgeModel": "gemini-2.5-flash",
+  "threshold": 8,
+  "meanOverall": 9,
+  "passed": false,
+  "results": [
+    {
+      "sample": "Coffee shop — local visibility",
+      "businessName": "Bloom Cafe",
+      "recommendedPackage": "momentum",
+      "recommendedAddOns": [
+        "reservation_system",
+        "gbp_optimization",
+        "seo_setup",
+        "photo_gallery"
+      ],
+      "categories": {
+        "businessUnderstanding": {
+          "score": 9,
+          "reason": "Accurately identifies the core problem of local discoverability in Munich and the need to convert online interest into physical foot traffic."
+        },
+        "specificity": {
+          "score": 8,
+          "reason": "Tailored well to a Munich-based specialty coffee shop, incorporating local SEO keywords and cafe-specific features like menus and reservations."
+        },
+        "strategicQuality": {
+          "score": 8,
+          "reason": "Strong focus on local search optimization and a seamless booking flow, which directly addresses the client's primary business goals."
+        },
+        "actionability": {
+          "score": 9,
+          "reason": "The sitemap is highly practical for a cafe, and the next steps outline a clear path forward from strategy to launch."
+        },
+        "recommendationFit": {
+          "score": 10,
+          "reason": "The Momentum package combined with GBP optimization, SEO setup, a photo gallery, and a reservation system perfectly matches a local cafe's needs."
+        },
+        "tone": {
+          "score": 9,
+          "reason": "Maintains a highly professional, consultative, and polished tone throughout the brief."
+        },
+        "safety": {
+          "score": 10,
+          "reason": "Fully compliant, free of fabricated guarantees, PII issues, or leaked system instructions."
+        }
+      },
+      "explanation": "This is an exceptionally strong and well-tailored brief that perfectly aligns the technical stack, sitemap, and add-ons with the specific needs of a local specialty coffee shop in Munich.",
+      "overall": 9,
+      "passed": true
+    },
+    {
+      "sample": "B2B consultancy — lead generation",
+      "error": "The AI consultant's free daily quota is temporarily used up. Please try again in a few minutes.",
+      "overall": 0,
+      "passed": false,
+      "categories": {}
+    },
+    {
+      "sample": "Boutique fitness studio — bookings",
+      "error": "The AI consultant's free daily quota is temporarily used up. Please try again in a few minutes.",
+      "overall": 0,
+      "passed": false,
+      "categories": {}
+    }
+  ]
+}
