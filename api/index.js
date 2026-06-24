@@ -661,8 +661,12 @@ async function saveLead(lead) {
         "Content-Type": "application/json",
         apikey: key,
         Authorization: `Bearer ${key}`,
-        // Ask PostgREST to return the inserted row so we can report its id.
-        Prefer: "return=representation",
+        // Insert-only: do NOT ask for the row back. "return=representation" makes
+        // PostgREST run INSERT ... RETURNING, which requires a SELECT RLS policy.
+        // The leads table is intentionally insert-only (no SELECT policy), so the
+        // RETURNING read fails RLS and the whole insert is rejected. return=minimal
+        // skips the read-back, so an anon/publishable key can write leads safely.
+        Prefer: "return=minimal",
       },
       body: JSON.stringify(lead),
     });
