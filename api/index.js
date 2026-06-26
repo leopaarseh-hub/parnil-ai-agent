@@ -282,11 +282,16 @@ function pickQuoteFromToolResult(toolQuote, packageKey, addOnKeys) {
 }
 
 function pricingToolCallEnabled() {
-  // Default ON; ENABLE_PRICING_TOOL_CALL="0"/"false" fully disables it.
+  // Default OFF. The pricing tool-call is a SECOND, sequential Gemini request on
+  // top of brief generation — on Vercel's 60s function limit those two calls
+  // together were tripping FUNCTION_INVOCATION_TIMEOUT (the brief spinner hung,
+  // then a 504). It is also redundant: computeQuote() already produces the exact,
+  // authoritative quote deterministically in code. Opt back in for the native
+  // tool-calling demo with ENABLE_PRICING_TOOL_CALL="1"/"true".
   const v = process.env.ENABLE_PRICING_TOOL_CALL;
-  if (v === undefined || v === null || v === "") return true;
+  if (v === undefined || v === null || v === "") return false;
   const s = String(v).trim().toLowerCase();
-  return s !== "0" && s !== "false" && s !== "off" && s !== "no";
+  return s === "1" || s === "true" || s === "on" || s === "yes";
 }
 
 // Run ONE native-tool-calling round so the model invokes calculate_quote with
@@ -600,7 +605,10 @@ async function makeClient() {
     throw err;
   }
   const mod = await import("@google/genai");
-  return new mod.GoogleGenAI({ apiKey });
+  // Cap each Gemini request below Vercel's 60s function limit so a slow upstream
+  // call fails fast with a friendly, retryable error instead of running out the
+  // clock and surfacing an opaque FUNCTION_INVOCATION_TIMEOUT (504) to the client.
+  return new mod.GoogleGenAI({ apiKey, httpOptions: { timeout: 50000 } });
 }
 
 async function generateWithFallback(ai, payload) {
