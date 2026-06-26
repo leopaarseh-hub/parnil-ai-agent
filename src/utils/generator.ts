@@ -159,17 +159,20 @@ export function generateClientBrief(state: FormState): GeneratedBrief {
     hosting = 'Cloud Run Dockerized with Geo-Redundant Caching';
   }
 
-  // 4. Estimation of Timeline based on pages and budget
-  let estimatedTimeline = '4-6 Weeks';
+  // 4. Estimation of Timeline based on pages and budget.
+  // Parnil delivers every project within a firm 4–15 business-day window, so the
+  // estimate always scales inside that range (never weeks): heavier scope trends
+  // toward 15 business days, leaner scope toward 4.
+  let estimatedTimeline = '4-6 business days';
   const pageCount = selectedPages.length;
   if (pageCount > 8) {
-    estimatedTimeline = '10-12 Weeks';
+    estimatedTimeline = '12-15 business days';
   } else if (pageCount > 5) {
-    estimatedTimeline = '7-9 Weeks';
+    estimatedTimeline = '9-12 business days';
   } else if (isHighBudget) {
-    estimatedTimeline = '8-10 Weeks (includes full UX research phase & accessibility testing)';
+    estimatedTimeline = '8-10 business days (includes full UX research phase & accessibility testing)';
   } else {
-    estimatedTimeline = '4-5 Weeks';
+    estimatedTimeline = '4-6 business days';
   }
 
   // 5. Next Steps for client

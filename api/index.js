@@ -66,9 +66,14 @@ function newRequestId() {
 
 const PARNIL_CATALOG = `Parnil Studio Services and Fees:
 CORE PACKAGES (one-time):
-- Presence — €948 — delivery ~5 days. Entry one-page presence. Included: core build only.
-- Momentum — €1,428 — delivery ~10 days. Includes: Photo Gallery + Google Business Profile Optimization + SEO Setup.
-- Authority — €2,227 — delivery ~14 days. Includes: Booking System + Reservation System + Google Ads Setup + Monthly Reporting.
+- Presence — €948 — delivery 4–6 business days. Entry one-page presence. Included: core build only.
+- Momentum — €1,428 — delivery 8–10 business days. Includes: Photo Gallery + Google Business Profile Optimization + SEO Setup.
+- Authority — €2,227 — delivery 12–15 business days. Includes: Booking System + Reservation System + Google Ads Setup + Monthly Reporting.
+
+DELIVERY TIMELINE POLICY (important — always express timelines this way):
+- Every Parnil project ships within a firm window of 4 to 15 BUSINESS DAYS — 4 business days for the leanest scope, 15 business days maximum for the most complex.
+- ALWAYS estimate and state delivery in BUSINESS DAYS, never in weeks/months. Analyse the actual scope (chosen package, number of pages, add-ons, automation/AI complexity, multi-language) and give a realistic estimate that lands INSIDE the 4–15 business-day window — e.g. "6–8 business days", "10–12 business days".
+- Heavier scope ⇒ closer to 15 business days; minimal scope ⇒ closer to 4. Never quote a window below 4 or above 15 business days, and never phrase it in weeks.
 
 ADD-ONS — Website Features (one-time):
 - Booking System — €149 | Reservation System — €179 | Online Ordering — €249
@@ -122,9 +127,9 @@ How to use this: map the client's situation to these services and to the package
 // Keep these prices in sync with PARNIL_CATALOG above.
 // ---------------------------------------------------------------------------
 const PACKAGES = {
-  presence: { label: "Presence", price: 948, timeline: "~5 days" },
-  momentum: { label: "Momentum", price: 1428, timeline: "~10 days" },
-  authority: { label: "Authority", price: 2227, timeline: "~14 days" },
+  presence: { label: "Presence", price: 948, timeline: "4–6 business days" },
+  momentum: { label: "Momentum", price: 1428, timeline: "8–10 business days" },
+  authority: { label: "Authority", price: 2227, timeline: "12–15 business days" },
 };
 const ADDONS = {
   booking_system: { label: "Booking System", price: 149 },
@@ -481,7 +486,7 @@ Return a SINGLE raw JSON object (no markdown, no code fences, no commentary outs
     "cms": "Bespoke Decoupled Database / Keystatic CMS",
     "animations": "Motion / CSS cubic-bezier transitions"
   },
-  "estimatedTimeline": "scope-based duration, e.g. '2-3 Weeks'",
+  "estimatedTimeline": "scope-based delivery window in BUSINESS DAYS, always inside Parnil's 4–15 business-day range — e.g. '6–8 business days'. Heavier scope (more pages, add-ons, automation/AI, multi-language) ⇒ closer to 15; minimal scope ⇒ closer to 4. NEVER use weeks/months and never go below 4 or above 15 business days. Write the unit in the target language.",
   "nextSteps": ["4 concrete next-step sentences in the target language"]
 }
 
