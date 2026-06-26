@@ -99,6 +99,7 @@ export interface TranslationDict {
   businessDomain: string;
   targetCapital: string;
   targetTimeline: string;
+  timelineEstimateNote: string;
   styleAlignment: string;
   sectionStrategy: string;
   sectionArchitecture: string;
@@ -305,7 +306,8 @@ export const TRANSLATIONS: Record<SupportedLang, TranslationDict> = {
     activeStatus: "AKTIVER SPEZIFIKATIONS-ENTWURF",
     businessDomain: "Unternehmensbereich",
     targetCapital: "Budgetrahmen",
-    targetTimeline: "Zeitrahmen",
+    targetTimeline: "Geschätzte Lieferzeit",
+    timelineEstimateNote: "Geschätztes Lieferfenster (4–15 Werktage), abhängig vom endgültigen Umfang — wird mit Ihnen im Strategiegespräch bestätigt.",
     styleAlignment: "Design-Ästhetik",
     sectionStrategy: "1. Projektstrategie & Markenausrichtung",
     sectionArchitecture: "2. Informationsarchitektur & Navigation",
@@ -501,7 +503,8 @@ export const TRANSLATIONS: Record<SupportedLang, TranslationDict> = {
     activeStatus: "ACTIVE PROPOSAL",
     businessDomain: "Business Domain",
     targetCapital: "Target Capital",
-    targetTimeline: "Target Timeline",
+    targetTimeline: "Estimated Delivery",
+    timelineEstimateNote: "Estimated delivery window (4–15 business days), depending on final scope — confirmed with you on your strategy call.",
     styleAlignment: "Axe Ethos Alignment",
     sectionStrategy: "1. Project Strategy & Alignment",
     sectionArchitecture: "2. Information Architecture",
@@ -697,7 +700,8 @@ export const TRANSLATIONS: Record<SupportedLang, TranslationDict> = {
     activeStatus: "AKTİF PROJE TEKLİFİ",
     businessDomain: "İşletme Sektörü",
     targetCapital: "Hedef Bütçe",
-    targetTimeline: "Teslimat Süresi",
+    targetTimeline: "Tahmini Teslimat",
+    timelineEstimateNote: "Tahmini teslimat süresi (4–15 iş günü), nihai kapsama bağlıdır — strateji görüşmenizde sizinle teyit edilir.",
     styleAlignment: "Tasarım Estetiği",
     sectionStrategy: "1. Proje Stratejisi & Hizalama",
     sectionArchitecture: "2. Bilgi Mimarisi & Site Haritası",
@@ -893,7 +897,8 @@ export const TRANSLATIONS: Record<SupportedLang, TranslationDict> = {
     activeStatus: "پروپوزال رسمی فعال",
     businessDomain: "دامنه کاری",
     targetCapital: "سرمایه‌گذاری هدف",
-    targetTimeline: "زمان تحویل هدف",
+    targetTimeline: "زمان تحویل تخمینی",
+    timelineEstimateNote: "بازه تحویل تخمینی (۴ تا ۱۵ روز کاری)، بسته به دامنه نهایی پروژه — در جلسه مشاوره استراتژیک با شما نهایی می‌شود.",
     styleAlignment: "سبک زیباشناسی طراحی",
     sectionStrategy: "۱. استراتژی پروژه و هم‌راستایی برند",
     sectionArchitecture: "۲. معماری اطلاعات و منوی سایت",

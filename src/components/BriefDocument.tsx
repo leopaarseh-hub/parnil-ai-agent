@@ -147,6 +147,11 @@ export default function BriefDocument({ brief, onModify, onRegenerate, activeLan
             </div>
           </div>
 
+          {/* Delivery is an estimate — make sure the client understands that */}
+          <p className="text-[11px] text-brand-paper/40 font-sans leading-relaxed -mt-2 px-1">
+            {t.timelineEstimateNote}
+          </p>
+
           {/* Strategic Narrative / Project Summary */}
           <div className="space-y-4">
             <h3 className="text-base sm:text-lg font-extrabold text-brand-paper font-display flex items-center gap-2 uppercase tracking-tight">
