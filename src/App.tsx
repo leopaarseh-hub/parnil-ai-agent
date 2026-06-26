@@ -13,7 +13,7 @@ import {
   Laptop, Palette, BookOpen, Coffee, HelpCircle, Target, 
   TrendingUp, Award, Users, HelpCircle as GoalIcon, Layout, 
   Clock, DollarSign, User, Mail, FileText, Check, FileCheck, Code,
-  CheckCircle2, Send, Bot, Loader2, MessageSquare, AlertCircle
+  CheckCircle2, Send, Bot, Loader2, MessageSquare, MessageSquarePlus, AlertCircle
 } from 'lucide-react';
 
 const INITIAL_FORM_STATE: FormState = {
@@ -215,6 +215,28 @@ export default function App() {
     setChatMessages(prev =>
       prev.length > 0 ? prev : [{ role: 'model', text: CHAT_GREETINGS[activeLang] }]
     );
+  };
+
+  // Start a completely fresh consulting session. Because the conversation is
+  // persisted to this device (so a refresh resumes where the visitor left off),
+  // we must explicitly clear that memory here — otherwise the old chat, form
+  // answers and brief would reappear. The visitor stays inside the consultant
+  // and lands on a clean greeting, as if opening the page for the first time.
+  const handleNewChat = () => {
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage.removeItem(SESSION_KEY);
+      } catch {
+        // Storage unavailable (e.g. private mode) — nothing to clear.
+      }
+    }
+    setFormState(INITIAL_FORM_STATE);
+    setGeneratedBrief(null);
+    setValidationError(null);
+    setChatInput('');
+    setIsTyping(false);
+    setChatMessages([{ role: 'model', text: CHAT_GREETINGS[activeLang] }]);
+    setViewMode('generator');
   };
 
   const handleSelectStyleInShowcase = (style: DesignStyle) => {
@@ -693,14 +715,27 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Exit consultant */}
-                <button
-                  type="button"
-                  onClick={() => setViewMode('landing')}
-                  className="px-3 py-1.5 rounded-lg text-[10px] font-mono tracking-wider uppercase text-brand-paper/40 hover:text-brand-paper border border-[#F5F3EE]/5 hover:border-brand-paper/15 hover:bg-[#F5F3EE]/5 transition-colors cursor-pointer"
-                >
-                  {activeLang === 'de' ? "Beenden" : activeLang === 'tr' ? "Çıkış" : activeLang === 'fa' ? "خروج" : "Exit"}
-                </button>
+                <div className="flex items-center gap-2">
+                  {/* Start a fresh session (clears saved chat, answers & brief) */}
+                  <button
+                    type="button"
+                    onClick={handleNewChat}
+                    title={activeLang === 'de' ? "Neue Unterhaltung beginnen" : activeLang === 'tr' ? "Yeni sohbet başlat" : activeLang === 'fa' ? "شروع گفتگوی جدید" : "Start a fresh conversation"}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-mono tracking-wider uppercase text-brand-ink bg-brand-acid hover:bg-brand-acid-hover hover:shadow-[0_0_15px_rgba(200,255,0,0.25)] transition-all cursor-pointer"
+                  >
+                    <MessageSquarePlus className="h-3 w-3" />
+                    {activeLang === 'de' ? "Neuer Chat" : activeLang === 'tr' ? "Yeni Sohbet" : activeLang === 'fa' ? "گفتگوی جدید" : "New Chat"}
+                  </button>
+
+                  {/* Exit consultant */}
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('landing')}
+                    className="px-3 py-1.5 rounded-lg text-[10px] font-mono tracking-wider uppercase text-brand-paper/40 hover:text-brand-paper border border-[#F5F3EE]/5 hover:border-brand-paper/15 hover:bg-[#F5F3EE]/5 transition-colors cursor-pointer"
+                  >
+                    {activeLang === 'de' ? "Beenden" : activeLang === 'tr' ? "Çıkış" : activeLang === 'fa' ? "خروج" : "Exit"}
+                  </button>
+                </div>
               </div>
 
               {/* Chat Message Scrollport */}
